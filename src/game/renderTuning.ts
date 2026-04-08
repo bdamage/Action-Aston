@@ -16,8 +16,8 @@ export interface SpriteAlignmentTuning {
 
 export const DEFAULT_ALIGNMENT_TUNING: SpriteAlignmentTuning = {
   player: {w: 2.5875, h: 2.5875, radius: 0.45},
-  enemy: {w: 1.425, h: 1.425, radius: 0.42},
-  projectile: {w: 0.28, h: 0.58, radius: 0.15},
+  enemy: {w: 2.5875, h: 2.5875, radius: 0.42},
+  projectile: {w: 0.45, h: 0.28, radius: 0.15},
   pickup: {w: 0.72, h: 0.72, radius: 0.4},
 };
 

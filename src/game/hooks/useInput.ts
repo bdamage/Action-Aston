@@ -66,6 +66,10 @@ export function useInputBindings() {
           state.setPhase("playing");
           return;
         }
+        if (state.phase === "alignment") {
+          state.setPhase("menu");
+          return;
+        }
       }
 
       keys.add(key);

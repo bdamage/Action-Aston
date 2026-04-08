@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { Suspense, useMemo } from 'react';
 import { MainMenu } from '../ui/MainMenu';
+import { SpriteAlignmentOverlay } from '../ui/SpriteAlignmentOverlay';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { HUD } from '../ui/HUD';
 import { PauseOverlay } from '../ui/PauseOverlay';
@@ -33,6 +34,7 @@ export function GameScreen() {
   const wave = useGameStore((state) => state.wave);
   const player = useGameStore((state) => state.player);
   const startGame = useGameStore((state) => state.startGame);
+  const startAlignment = useGameStore((state) => state.startAlignment);
   const restartGame = useGameStore((state) => state.restartGame);
   const setPhase = useGameStore((state) => state.setPhase);
   const setMovement = useGameStore((state) => state.setMovement);
@@ -45,7 +47,7 @@ export function GameScreen() {
   const canvasDpr = showTouchControls ? ([1, 1.2] as [number, number]) : ([1, 1.5] as [number, number]);
 
   return (
-    <main className="relative h-full w-full">
+    <main className="relative h-[100dvh] w-screen overflow-hidden">
       <GameErrorBoundary>
         <Canvas
           orthographic
@@ -74,9 +76,13 @@ export function GameScreen() {
         </div>
       )}
 
-      {phase === 'menu' && <MainMenu onStart={startGame} />}
+      {phase === 'menu' && <MainMenu onStart={startGame} onOpenAlignment={startAlignment} />}
 
-      {phase !== 'menu' && (
+      {phase === 'alignment' && (
+        <SpriteAlignmentOverlay onBack={() => setPhase('menu')} />
+      )}
+
+      {phase !== 'menu' && phase !== 'alignment' && (
         <HUD
           score={score}
           wave={wave}

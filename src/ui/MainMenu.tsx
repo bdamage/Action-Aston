@@ -18,21 +18,18 @@ export function MainMenu({ onStart, onOpenAlignment }: MainMenuProps) {
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/50" />
 
-      <div className="absolute inset-x-0 top-[8%] flex justify-center px-4 sm:top-[6%]">
+      <div className="absolute inset-x-0 top-[max(1.25rem,env(safe-area-inset-top))] flex justify-center px-4 sm:top-[max(1.5rem,env(safe-area-inset-top))]">
         <img
           src={mobileLogoUrl}
           alt="Action Aston"
-          className="menu-logo-float w-[min(88vw,28rem)] object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.45)]"
+          className="menu-logo-float w-[min(84vw,26rem)] object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.45)]"
           draggable={false}
         />
       </div>
 
       <div className="absolute inset-x-0 bottom-0 px-3 pb-[max(0.9rem,env(safe-area-inset-bottom))] sm:px-5">
         <div className="mx-auto w-full max-w-3xl rounded-2xl border border-cyan-200/25 bg-black/55 p-4 shadow-glow backdrop-blur-md sm:p-6">
-          <h1 className="text-center text-2xl font-black uppercase tracking-[0.18em] text-cyan-100 sm:text-4xl">Action Aston</h1>
-          <p className="mt-3 text-center text-sm text-slate-200">
-            Main menu is anchored to the lower part of the screen.
-          </p>
+
 
           <button
             type="button"
