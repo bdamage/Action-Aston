@@ -1,5 +1,5 @@
 import { Canvas, useThree } from '@react-three/fiber';
-import { Suspense, useLayoutEffect, useMemo } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { MainMenu } from '../ui/MainMenu';
 import { SpriteAlignmentOverlay } from '../ui/SpriteAlignmentOverlay';
@@ -7,12 +7,15 @@ import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { HUD } from '../ui/HUD';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { TouchControls } from '../ui/TouchControls';
+import { OptionsOverlay } from '../ui/OptionsOverlay';
 import { GameErrorBoundary } from '../ui/GameErrorBoundary';
 import { useInputBindings } from '../game/hooks/useInput';
 import { RenderScene } from '../game/entities/RenderScene';
 import { HALF_HEIGHT } from '../game/constants';
 import { CAMERA_ZOOM } from '../game/renderTuning';
 import { useGameStore } from '../game/state/gameStore';
+import { soundManager } from '../game/SoundManager';
+import { fetchLeaderboard, submitScore, type LeaderboardEntry } from './leaderboard';
 
 function SceneLoadingFallback() {
   return (
@@ -49,6 +52,8 @@ function ResponsiveOrthoCamera() {
 export function GameScreen() {
   useInputBindings();
 
+  const initialAudioSettings = useMemo(() => soundManager.getSettings(), []);
+
   const phase = useGameStore((state) => state.phase);
   const score = useGameStore((state) => state.score);
   const wave = useGameStore((state) => state.wave);
@@ -60,11 +65,122 @@ export function GameScreen() {
   const setMovement = useGameStore((state) => state.setMovement);
   const setShooting = useGameStore((state) => state.setShooting);
 
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  const [playerName, setPlayerName] = useState('Pilot');
+  const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(initialAudioSettings.musicEnabled);
+  const [sfxEnabled, setSfxEnabled] = useState(initialAudioSettings.sfxEnabled);
+  const [musicVolume, setMusicVolume] = useState(initialAudioSettings.musicVolume);
+  const [sfxVolume, setSfxVolume] = useState(initialAudioSettings.sfxVolume);
+  const previousPhaseRef = useRef(phase);
+
   const showTouchControls = useMemo(
     () => typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0),
     []
   );
   const canvasDpr = showTouchControls ? ([1, 1.2] as [number, number]) : ([1, 1.5] as [number, number]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLeaderboard() {
+      setLoadingLeaderboard(true);
+      setLeaderboardError(null);
+      try {
+        const entries = await fetchLeaderboard();
+        if (!cancelled) {
+          setLeaderboard(entries);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Could not load leaderboard.';
+          setLeaderboardError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingLeaderboard(false);
+        }
+      }
+    }
+
+    void loadLeaderboard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const previousPhase = previousPhaseRef.current;
+    if (phase === 'gameover' && previousPhase !== 'gameover') {
+      setSubmitState('idle');
+      setSubmitMessage(null);
+      setHasSubmitted(false);
+    }
+    previousPhaseRef.current = phase;
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === 'playing' || phase === 'paused') {
+      soundManager.playMusic('gameplay');
+      return;
+    }
+
+    if (phase === 'gameover') {
+      soundManager.playMusic('leaderboard');
+      return;
+    }
+
+    soundManager.playMusic('title');
+  }, [phase]);
+
+  useEffect(() => {
+    soundManager.setMusicEnabled(musicEnabled);
+  }, [musicEnabled]);
+
+  useEffect(() => {
+    soundManager.setSfxEnabled(sfxEnabled);
+  }, [sfxEnabled]);
+
+  useEffect(() => {
+    soundManager.setMusicVolume(musicVolume);
+  }, [musicVolume]);
+
+  useEffect(() => {
+    soundManager.setSfxVolume(sfxVolume);
+  }, [sfxVolume]);
+
+  useEffect(() => {
+    if (phase !== 'menu' && optionsOpen) {
+      setOptionsOpen(false);
+    }
+  }, [optionsOpen, phase]);
+
+  async function handleSubmitScore() {
+    if (submitState === 'saving' || hasSubmitted) {
+      return;
+    }
+
+    setSubmitState('saving');
+    setSubmitMessage(null);
+
+    try {
+      const entries = await submitScore(playerName, score);
+      setLeaderboard(entries);
+      setSubmitState('saved');
+      setHasSubmitted(true);
+      setSubmitMessage('Score saved to global leaderboard.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Score upload failed.';
+      setSubmitState('error');
+      setSubmitMessage(message);
+    }
+  }
 
   return (
     <main className="relative h-[100dvh] w-screen overflow-hidden bg-black">
@@ -95,7 +211,30 @@ export function GameScreen() {
         </div>
       )}
 
-      {phase === 'menu' && <MainMenu onStart={startGame} onOpenAlignment={startAlignment} />}
+      {phase === 'menu' && (
+        <MainMenu
+          onStart={startGame}
+          onOpenAlignment={startAlignment}
+          onOpenOptions={() => setOptionsOpen(true)}
+          leaderboard={leaderboard}
+          loadingLeaderboard={loadingLeaderboard}
+          leaderboardError={leaderboardError}
+        />
+      )}
+
+      {phase === 'menu' && optionsOpen && (
+        <OptionsOverlay
+          musicEnabled={musicEnabled}
+          sfxEnabled={sfxEnabled}
+          musicVolume={musicVolume}
+          sfxVolume={sfxVolume}
+          onMusicEnabledChange={setMusicEnabled}
+          onSfxEnabledChange={setSfxEnabled}
+          onMusicVolumeChange={setMusicVolume}
+          onSfxVolumeChange={setSfxVolume}
+          onClose={() => setOptionsOpen(false)}
+        />
+      )}
 
       {phase === 'alignment' && (
         <SpriteAlignmentOverlay onBack={() => setPhase('menu')} />
@@ -118,7 +257,17 @@ export function GameScreen() {
       )}
 
       {phase === 'gameover' && (
-        <GameOverOverlay score={score} onRestart={restartGame} onExit={() => setPhase('menu')} />
+        <GameOverOverlay
+          score={score}
+          playerName={playerName}
+          submitState={submitState}
+          submitMessage={submitMessage}
+          hasSubmitted={hasSubmitted}
+          onNameChange={setPlayerName}
+          onSubmitScore={handleSubmitScore}
+          onRestart={restartGame}
+          onExit={() => setPhase('menu')}
+        />
       )}
 
       {showTouchControls && phase === 'playing' && (
