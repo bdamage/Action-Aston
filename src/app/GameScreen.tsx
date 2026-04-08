@@ -49,7 +49,7 @@ export function GameScreen() {
         <Canvas
           orthographic
           camera={{
-            zoom: 32,
+            zoom: 1,
             position: [0, 0, 12],
             near: 0.1,
             far: 100,
