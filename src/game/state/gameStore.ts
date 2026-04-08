@@ -1,0 +1,352 @@
+import {create} from "zustand";
+import {HALF_HEIGHT, HALF_WIDTH, PLAYER_BASE} from "../constants";
+import {clamp, intersects} from "../systems/collisionSystem";
+import {maybeCreatePickup} from "../systems/pickupSystem";
+import {updateSpawnTimer} from "../systems/spawnSystem";
+import {soundManager} from "../SoundManager";
+import type {
+  Enemy,
+  Explosion,
+  GamePhase,
+  GameState,
+  Pickup,
+  Projectile,
+  Vector2,
+} from "../types";
+
+interface GameStore extends GameState {
+  startGame: () => void;
+  restartGame: () => void;
+  setPhase: (phase: GamePhase) => void;
+  setMovement: (movement: Vector2) => void;
+  setShooting: (shooting: boolean) => void;
+  step: (dt: number) => void;
+}
+
+function createBaseState(): GameState {
+  return {
+    phase: "menu",
+    score: 0,
+    elapsed: 0,
+    difficulty: 1,
+    wave: 0,
+    spawnTimer: 0.45,
+    nextEnemyId: 1,
+    nextProjectileId: 1,
+    nextPickupId: 1,
+    nextExplosionId: 1,
+    player: {...PLAYER_BASE, position: {...PLAYER_BASE.position}},
+    enemies: [],
+    projectiles: [],
+    pickups: [],
+    explosions: [],
+    input: {
+      movement: {x: 0, y: 0},
+      shooting: false,
+    },
+  };
+}
+
+function normalizeMovement(x: number, y: number) {
+  const mag = Math.hypot(x, y);
+  if (mag <= 1) return {x, y};
+  return {x: x / mag, y: y / mag};
+}
+
+export const useGameStore = create<GameStore>((set, get) => ({
+  ...createBaseState(),
+  setMovement: (movement) =>
+    set((state) => ({
+      input: {
+        ...state.input,
+        movement: normalizeMovement(movement.x, movement.y),
+      },
+    })),
+  setShooting: (shooting) =>
+    set((state) => ({
+      input: {...state.input, shooting},
+    })),
+  setPhase: (phase) => set({phase}),
+  startGame: () =>
+    set((state) => {
+      if (state.phase === "playing") {
+        return state;
+      }
+      return {
+        ...createBaseState(),
+        phase: "playing",
+      };
+    }),
+  restartGame: () =>
+    set({
+      ...createBaseState(),
+      phase: "playing",
+    }),
+  step: (dt) => {
+    const state = get();
+    if (state.phase !== "playing") {
+      return;
+    }
+
+    const nextElapsed = state.elapsed + dt;
+    const nextDifficulty = 1 + nextElapsed * 0.05;
+
+    const player = {
+      ...state.player,
+      position: {...state.player.position},
+      shootCooldown: Math.max(0, state.player.shootCooldown - dt),
+      boostTimer: Math.max(0, state.player.boostTimer - dt),
+    };
+
+    player.position.x = clamp(
+      player.position.x + state.input.movement.x * player.speed * dt,
+      -HALF_WIDTH + player.radius,
+      HALF_WIDTH - player.radius,
+    );
+    player.position.y = clamp(
+      player.position.y + state.input.movement.y * player.speed * dt,
+      -HALF_HEIGHT + player.radius,
+      HALF_HEIGHT - player.radius,
+    );
+
+    const projectiles: Projectile[] = state.projectiles.map((projectile) => ({
+      ...projectile,
+      position: {
+        x: projectile.position.x + projectile.velocity.x * dt,
+        y: projectile.position.y + projectile.velocity.y * dt,
+      },
+    }));
+
+    let nextProjectileId = state.nextProjectileId;
+    let nextPickupId = state.nextPickupId;
+    let nextExplosionId = state.nextExplosionId;
+
+    if (state.input.shooting && player.shootCooldown <= 0 && player.ammo > 0) {
+      const spread = player.boostTimer > 0 ? [-0.14, 0, 0.14] : [0];
+      for (const offset of spread) {
+        projectiles.push({
+          id: nextProjectileId++,
+          from: "player",
+          position: {
+            x: player.position.x + offset,
+            y: player.position.y + 0.52,
+          },
+          velocity: {x: 0, y: 14},
+          radius: 0.15,
+          damage: player.boostTimer > 0 ? 20 : 12,
+        });
+      }
+
+      player.shootCooldown = player.boostTimer > 0 ? 0.09 : 0.18;
+      player.ammo = Math.max(0, player.ammo - 1);
+      soundManager.playShoot();
+    }
+
+    const spawnState: GameState = {
+      ...state,
+      elapsed: nextElapsed,
+      difficulty: nextDifficulty,
+      spawnTimer: state.spawnTimer,
+      nextEnemyId: state.nextEnemyId,
+      wave: state.wave,
+    };
+    const spawnedEnemies = updateSpawnTimer(spawnState, dt);
+
+    const enemies: Enemy[] = [...state.enemies, ...spawnedEnemies].map(
+      (enemy) => {
+        const dx = player.position.x - enemy.position.x;
+        const adjustX = clamp(
+          dx * enemy.trackStrength * dt,
+          -1.2 * dt,
+          1.2 * dt,
+        );
+        const fireCooldown = enemy.fireCooldown - dt;
+
+        return {
+          ...enemy,
+          position: {
+            x: enemy.position.x + adjustX,
+            y: enemy.position.y - enemy.speed * dt,
+          },
+          fireCooldown,
+        };
+      },
+    );
+
+    for (const enemy of enemies) {
+      if (enemy.fireCooldown <= 0) {
+        const dx = player.position.x - enemy.position.x;
+        const dy = player.position.y - enemy.position.y;
+        const inv = 1 / Math.max(0.001, Math.hypot(dx, dy));
+        projectiles.push({
+          id: nextProjectileId++,
+          from: "enemy",
+          position: {x: enemy.position.x, y: enemy.position.y - 0.3},
+          velocity: {x: dx * inv * 6.5, y: dy * inv * 6.5},
+          radius: 0.16,
+          damage: 9 + nextDifficulty,
+        });
+        enemy.fireCooldown =
+          Math.max(0.6, 1.6 - nextDifficulty * 0.08) + Math.random() * 0.6;
+      }
+    }
+
+    const explosions: Explosion[] = state.explosions
+      .map((explosion) => ({...explosion, ttl: explosion.ttl - dt}))
+      .filter((explosion) => explosion.ttl > 0);
+
+    const pickups: Pickup[] = state.pickups
+      .map((pickup) => ({
+        ...pickup,
+        position: {x: pickup.position.x, y: pickup.position.y - dt * 1.2},
+      }))
+      .filter((pickup) => pickup.position.y > -HALF_HEIGHT - 1);
+
+    let score = state.score;
+
+    for (const projectile of projectiles) {
+      if (projectile.from !== "player") continue;
+      for (const enemy of enemies) {
+        if (enemy.hp <= 0) continue;
+        if (
+          !intersects(
+            projectile.position,
+            projectile.radius,
+            enemy.position,
+            enemy.radius,
+          )
+        )
+          continue;
+
+        enemy.hp -= projectile.damage;
+        projectile.damage = 0;
+
+        if (enemy.hp <= 0) {
+          score += 100;
+          explosions.push({
+            id: nextExplosionId++,
+            position: {...enemy.position},
+            ttl: 0.4,
+            maxTtl: 0.4,
+            scale: 1.2,
+          });
+
+          const maybePickup = maybeCreatePickup(
+            nextPickupId++,
+            enemy.position.x,
+            enemy.position.y,
+          );
+          if (maybePickup) {
+            pickups.push(maybePickup);
+          }
+
+          soundManager.playExplosion();
+        }
+      }
+    }
+
+    const aliveEnemies = enemies.filter(
+      (enemy) => enemy.hp > 0 && enemy.position.y > -HALF_HEIGHT - 2,
+    );
+    const activeProjectiles = projectiles.filter(
+      (projectile) =>
+        projectile.damage > 0 &&
+        projectile.position.y > -HALF_HEIGHT - 2 &&
+        projectile.position.y < HALF_HEIGHT + 2,
+    );
+
+    for (const enemy of aliveEnemies) {
+      if (
+        !intersects(
+          enemy.position,
+          enemy.radius,
+          player.position,
+          player.radius,
+        )
+      )
+        continue;
+      enemy.hp = 0;
+      if (player.shield > 0) {
+        player.shield = Math.max(0, player.shield - 22);
+      } else {
+        player.health = Math.max(0, player.health - 18);
+      }
+      explosions.push({
+        id: nextExplosionId++,
+        position: {...enemy.position},
+        ttl: 0.35,
+        maxTtl: 0.35,
+        scale: 1.3,
+      });
+    }
+
+    for (const projectile of activeProjectiles) {
+      if (projectile.from !== "enemy") continue;
+      if (
+        !intersects(
+          projectile.position,
+          projectile.radius,
+          player.position,
+          player.radius,
+        )
+      )
+        continue;
+      const hitDamage = projectile.damage;
+      projectile.damage = 0;
+      if (player.shield > 0) {
+        player.shield = Math.max(0, player.shield - hitDamage);
+      } else {
+        player.health = Math.max(0, player.health - hitDamage);
+      }
+    }
+
+    for (const pickup of pickups) {
+      if (
+        !intersects(
+          pickup.position,
+          pickup.radius,
+          player.position,
+          player.radius,
+        )
+      )
+        continue;
+      const value = pickup.value;
+      pickup.value = 0;
+      if (pickup.type === "health") {
+        player.health = Math.min(player.maxHealth, player.health + value + 18);
+      }
+      if (pickup.type === "shield") {
+        player.shield = Math.min(player.maxShield, player.shield + value + 18);
+      }
+      if (pickup.type === "ammo") {
+        player.ammo = Math.min(player.maxAmmo, player.ammo + value + 16);
+      }
+      if (pickup.type === "boost") {
+        player.boostTimer = Math.min(12, player.boostTimer + 5.5);
+      }
+      soundManager.playPickup();
+    }
+
+    const phase: GamePhase = player.health <= 0 ? "gameover" : "playing";
+
+    set({
+      phase,
+      score,
+      elapsed: nextElapsed,
+      difficulty: nextDifficulty,
+      wave: spawnState.wave,
+      spawnTimer: spawnState.spawnTimer,
+      nextEnemyId: spawnState.nextEnemyId,
+      nextProjectileId,
+      nextPickupId,
+      nextExplosionId,
+      player,
+      enemies: aliveEnemies.filter((enemy) => enemy.hp > 0),
+      projectiles: activeProjectiles.filter(
+        (projectile) => projectile.damage > 0,
+      ),
+      pickups: pickups.filter((pickup) => pickup.value > 0),
+      explosions: explosions.slice(-70),
+    });
+  },
+}));
