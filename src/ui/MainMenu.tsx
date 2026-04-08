@@ -1,185 +1,35 @@
-import { useEffect, useMemo, useState } from 'react';
-import { atlas, type SpriteKey } from '../assets/assetConfig';
-import { WORLD_HEIGHT, WORLD_WIDTH } from '../game/constants';
-import { CAMERA_ZOOM, DRAW_SIZES, SPRITE_SCALE } from '../game/renderTuning';
+const MENU_BACKGROUND_URL = '/dist/assets/image.png';
 
 interface MainMenuProps {
   onStart: () => void;
 }
 
-interface ViewportMetrics {
-  width: number;
-  height: number;
-}
-
-const CLIP_ORDER: SpriteKey[] = [
-  'player',
-  'enemy01',
-  'enemy02',
-  'enemy03',
-  'laserBlue',
-  'laserRed',
-  'pickupHealth',
-  'pickupShield',
-  'pickupAmmo',
-  'pickupBoost',
-  'explosion01',
-  'explosion02',
-  'explosion03'
-];
-
-const CLIP_COLOR: Record<SpriteKey, string> = {
-  player: '#6ee7ff',
-  enemy01: '#ff8d8d',
-  enemy02: '#ffe38e',
-  enemy03: '#c5ff8f',
-  laserBlue: '#8ff8ff',
-  laserRed: '#ff9f8f',
-  pickupHealth: '#57f8a0',
-  pickupShield: '#4f8dff',
-  pickupAmmo: '#ffd05b',
-  pickupBoost: '#ff61d8',
-  explosion01: '#ff9d63',
-  explosion02: '#ffb27b',
-  explosion03: '#ffc197'
-};
-
-function SpriteClipPreview({ sprite }: { sprite: SpriteKey }) {
-  const frame = atlas.frames[sprite];
-  const thumbScale = 0.33;
-
-  return (
-    <div className="rounded-lg border border-cyan-200/20 bg-black/35 p-2">
-      <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-300">
-        <span>{sprite}</span>
-        <span>{`${frame.x},${frame.y},${frame.w}x${frame.h}`}</span>
-      </div>
-      <div className="flex min-h-[3.4rem] items-center justify-center rounded bg-black/55 p-2">
-        <div
-          style={{
-            width: Math.max(26, frame.w * thumbScale),
-            height: Math.max(24, frame.h * thumbScale),
-            backgroundImage: `url(${atlas.url})`,
-            backgroundPosition: `${-frame.x * thumbScale}px ${-frame.y * thumbScale}px`,
-            backgroundSize: `${atlas.width * thumbScale}px ${atlas.height * thumbScale}px`,
-            backgroundRepeat: 'no-repeat'
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
 export function MainMenu({ onStart }: MainMenuProps) {
-  const atlasScale = 0.19;
-  const [viewport, setViewport] = useState<ViewportMetrics>({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1280,
-    height: typeof window !== 'undefined' ? window.innerHeight : 720
-  });
-
-  useEffect(() => {
-    const update = () => {
-      setViewport({ width: window.innerWidth, height: window.innerHeight });
-    };
-
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-
-  const diagnostics = useMemo(() => {
-    const worldWidthVisible = WORLD_WIDTH / CAMERA_ZOOM;
-    const worldHeightVisible = WORLD_HEIGHT / CAMERA_ZOOM;
-    const pxPerUnitX = viewport.width / worldWidthVisible;
-    const pxPerUnitY = viewport.height / worldHeightVisible;
-
-    const playerWidthWorld = DRAW_SIZES.player.w * SPRITE_SCALE;
-    const enemyWidthWorld = DRAW_SIZES.enemy.w * SPRITE_SCALE;
-    const pickupWidthWorld = DRAW_SIZES.pickup.w * SPRITE_SCALE;
-
-    return {
-      worldWidthVisible,
-      worldHeightVisible,
-      pxPerUnitX,
-      pxPerUnitY,
-      playerWidthPx: playerWidthWorld * pxPerUnitX,
-      enemyWidthPx: enemyWidthWorld * pxPerUnitX,
-      pickupWidthPx: pickupWidthWorld * pxPerUnitX
-    };
-  }, [viewport.width, viewport.height]);
-
   return (
-    <div className="absolute inset-0 z-30 bg-black/60 p-3 sm:p-5">
-      <div className="mx-auto grid h-full w-full max-w-6xl grid-rows-[auto,1fr,auto] gap-3 overflow-hidden rounded-2xl border border-cyan-300/30 bg-ink/90 p-4 shadow-glow backdrop-blur sm:p-5">
-        <div className="text-center">
-          <h1 className="text-2xl font-black uppercase tracking-[0.18em] text-cyan-100 sm:text-4xl">Action Aston</h1>
-          <p className="mt-2 text-xs text-slate-300 sm:text-sm">
-            Sprite Clip Inspector: atlasen till vanster visar exakta klipprektanglar, och panelen till hoger visar utskurna sprites.
+    <div className="absolute inset-0 z-30 overflow-hidden">
+      <img
+        src={MENU_BACKGROUND_URL}
+        alt="Main menu background"
+        className="absolute inset-0 h-full w-full object-cover"
+        draggable={false}
+      />
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/50" />
+
+      <div className="absolute inset-x-0 bottom-0 px-3 pb-[max(0.9rem,env(safe-area-inset-bottom))] sm:px-5">
+        <div className="mx-auto w-full max-w-3xl rounded-2xl border border-cyan-200/25 bg-black/55 p-4 shadow-glow backdrop-blur-md sm:p-6">
+          <h1 className="text-center text-2xl font-black uppercase tracking-[0.18em] text-cyan-100 sm:text-4xl">Action Aston</h1>
+          <p className="mt-3 text-center text-sm text-slate-200">
+            New background active. Main menu is now anchored to the lower part of the screen.
           </p>
-        </div>
 
-        <div className="grid min-h-0 gap-3 lg:grid-cols-[1.2fr,1fr]">
-          <div className="min-h-0 overflow-auto rounded-xl border border-cyan-300/20 bg-black/35 p-3">
-            <div className="relative mx-auto" style={{ width: atlas.width * atlasScale, height: atlas.height * atlasScale }}>
-              <img
-                src={atlas.url}
-                alt="Sprite atlas"
-                className="absolute inset-0 h-full w-full rounded object-cover"
-                draggable={false}
-              />
-              {CLIP_ORDER.map((sprite) => {
-                const frame = atlas.frames[sprite];
-                return (
-                  <div
-                    key={sprite}
-                    className="absolute rounded-[4px] border"
-                    style={{
-                      left: frame.x * atlasScale,
-                      top: frame.y * atlasScale,
-                      width: frame.w * atlasScale,
-                      height: frame.h * atlasScale,
-                      borderColor: CLIP_COLOR[sprite],
-                      boxShadow: `0 0 0.45rem ${CLIP_COLOR[sprite]}70`
-                    }}
-                    title={sprite}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="min-h-0 overflow-auto rounded-xl border border-cyan-300/20 bg-black/35 p-3">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {CLIP_ORDER.map((sprite) => (
-                <SpriteClipPreview key={sprite} sprite={sprite} />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-2 lg:grid-cols-[1fr,1fr,1.4fr]">
           <button
             type="button"
             onClick={onStart}
-            className="rounded-xl bg-neon px-4 py-3 text-base font-bold text-slate-900 active:scale-[0.98]"
+            className="mt-5 w-full rounded-xl bg-neon px-4 py-4 text-lg font-bold text-slate-900 active:scale-[0.98]"
           >
             Start Mission
           </button>
-          <div className="flex items-center justify-center rounded-xl border border-cyan-200/20 bg-black/30 px-3 py-2 text-center text-xs text-cyan-100/90">
-            Om en ruta ser fel ut i inspectorpanelen, justera koordinater i src/assets/assetConfig.ts.
-          </div>
-          <div className="rounded-xl border border-amber-200/30 bg-black/35 p-3 text-[11px] text-amber-100/90">
-            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-200">Size Diagnostics</div>
-            <div>Viewport: {Math.round(viewport.width)} x {Math.round(viewport.height)} px</div>
-            <div>Camera zoom: {CAMERA_ZOOM.toFixed(2)}</div>
-            <div>Visible world: {diagnostics.worldWidthVisible.toFixed(2)} x {diagnostics.worldHeightVisible.toFixed(2)} units</div>
-            <div>Px per unit: x {diagnostics.pxPerUnitX.toFixed(1)} | y {diagnostics.pxPerUnitY.toFixed(1)}</div>
-            <div className="mt-2">Player width: ~{diagnostics.playerWidthPx.toFixed(0)} px</div>
-            <div>Enemy width: ~{diagnostics.enemyWidthPx.toFixed(0)} px</div>
-            <div>Pickup width: ~{diagnostics.pickupWidthPx.toFixed(0)} px</div>
-            <div className="mt-2 text-amber-200/80">
-              Guideline: player around 48-72 px and enemies around 38-60 px usually feels readable without dominating screen space.
-            </div>
-          </div>
         </div>
       </div>
     </div>
