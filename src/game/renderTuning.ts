@@ -1,5 +1,5 @@
 export const CAMERA_ZOOM = 1;
-export const SPRITE_SCALE = 0.35;
+export const SPRITE_SCALE = 0.7;
 
 export interface SpriteAlignmentEntry {
   w: number;

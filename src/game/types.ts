@@ -30,6 +30,7 @@ export interface Player {
   maxAmmo: number;
   shootCooldown: number;
   boostTimer: number;
+  hitFlash: number;
 }
 
 export interface Enemy {
@@ -41,6 +42,7 @@ export interface Enemy {
   speed: number;
   trackStrength: number;
   fireCooldown: number;
+  hitFlash: number;
 }
 
 export interface Projectile {

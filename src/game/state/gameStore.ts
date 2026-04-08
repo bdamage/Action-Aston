@@ -74,6 +74,7 @@ function normalizeMovement(x: number, y: number) {
 }
 
 const SIMULATION_SPEED = 0.7;
+const HIT_FLASH_DURATION = 0.16;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   ...createBaseState(),
@@ -171,6 +172,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       radius: state.alignment.player.radius,
       shootCooldown: Math.max(0, state.player.shootCooldown - frameDt),
       boostTimer: Math.max(0, state.player.boostTimer - frameDt),
+      hitFlash: Math.max(0, state.player.hitFlash - frameDt),
     };
 
     player.position.x = clamp(
@@ -244,6 +246,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             y: enemy.position.y - enemy.speed * frameDt,
           },
           fireCooldown,
+          hitFlash: Math.max(0, enemy.hitFlash - frameDt),
         };
       },
     );
@@ -302,6 +305,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           continue;
 
         enemy.hp -= projectile.damage;
+        enemy.hitFlash = HIT_FLASH_DURATION;
         projectile.damage = 0;
 
         if (enemy.hp <= 0) {
@@ -355,6 +359,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       )
         continue;
       enemy.hp = 0;
+      player.hitFlash = HIT_FLASH_DURATION;
       if (player.shield > 0) {
         player.shield = Math.max(0, player.shield - 22);
       } else {
@@ -382,6 +387,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         continue;
       const hitDamage = projectile.damage;
       projectile.damage = 0;
+      player.hitFlash = HIT_FLASH_DURATION;
       if (player.shield > 0) {
         player.shield = Math.max(0, player.shield - hitDamage);
       } else {

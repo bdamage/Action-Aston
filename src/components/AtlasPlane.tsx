@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import { AdditiveBlending } from 'three';
 
 interface AtlasPlaneProps {
   texture: THREE.Texture;
@@ -7,6 +8,7 @@ interface AtlasPlaneProps {
   opacity?: number;
   tint?: string;
   rotationZ?: number;
+  flashOpacity?: number;
 }
 
 export function AtlasPlane({
@@ -15,12 +17,28 @@ export function AtlasPlane({
   size = [0.9, 0.9],
   opacity = 1,
   tint = '#ffffff',
-  rotationZ = 0
+  rotationZ = 0,
+  flashOpacity = 0
 }: AtlasPlaneProps) {
   return (
-    <mesh position={position} rotation={[0, 0, rotationZ]}>
-      <planeGeometry args={size} />
-      <meshBasicMaterial map={texture} transparent opacity={opacity} color={tint} />
-    </mesh>
+    <group position={position} rotation={[0, 0, rotationZ]}>
+      <mesh>
+        <planeGeometry args={size} />
+        <meshBasicMaterial map={texture} transparent opacity={opacity} color={tint} />
+      </mesh>
+      {flashOpacity > 0 && (
+        <mesh position={[0, 0, 0.01]}>
+          <planeGeometry args={size} />
+          <meshBasicMaterial
+            map={texture}
+            transparent
+            opacity={flashOpacity}
+            color="#ffffff"
+            blending={AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+    </group>
   );
 }

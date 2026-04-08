@@ -33,6 +33,7 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
       speed: 1.6 + rand(0.15, 0.8) + state.difficulty * 0.18,
       trackStrength: 0.5 + Math.random() * 0.75,
       fireCooldown: rand(0.9, 1.8),
+      hitFlash: 0,
     });
   }
 

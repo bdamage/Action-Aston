@@ -28,6 +28,11 @@ function scaledSizeFromFrame(
   return scaledSize(targetHeight * aspect, targetHeight, spriteScaleMultiplier);
 }
 
+function hitFlashOpacity(hitFlash: number): number {
+  if (hitFlash <= 0) return 0;
+  return Math.floor(hitFlash * 20) % 2 === 0 ? 0.95 : 0;
+}
+
 function BoundsOverlay({
   position,
   width,
@@ -110,6 +115,7 @@ export function RenderScene() {
         texture={textures.player}
         position={inAlignmentMode ? [0, 0, 0] : [player.position.x, player.position.y, 0]}
         size={playerSize}
+        flashOpacity={!inAlignmentMode ? hitFlashOpacity(player.hitFlash) : 0}
         rotationZ={Math.PI}
       />
 
@@ -170,6 +176,7 @@ export function RenderScene() {
           texture={textures[enemy.type]}
           position={[enemy.position.x, enemy.position.y, 0]}
           size={scaledSizeFromFrame(enemy.type, alignment.enemy.h, spriteScaleMultiplier)}
+          flashOpacity={hitFlashOpacity(enemy.hitFlash)}
           rotationZ={Math.PI}
         />
       ))}

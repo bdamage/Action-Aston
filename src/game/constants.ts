@@ -16,7 +16,8 @@ export const PLAYER_BASE: Player = {
   ammo: 180,
   maxAmmo: 220,
   shootCooldown: 0,
-  boostTimer: 0
+  boostTimer: 0,
+  hitFlash: 0
 };
 
 export const PICKUP_COLORS: Record<string, string> = {

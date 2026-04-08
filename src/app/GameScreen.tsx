@@ -1,5 +1,6 @@
-import { Canvas } from '@react-three/fiber';
-import { Suspense, useMemo } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { Suspense, useLayoutEffect, useMemo } from 'react';
+import * as THREE from 'three';
 import { MainMenu } from '../ui/MainMenu';
 import { SpriteAlignmentOverlay } from '../ui/SpriteAlignmentOverlay';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
@@ -9,7 +10,7 @@ import { TouchControls } from '../ui/TouchControls';
 import { GameErrorBoundary } from '../ui/GameErrorBoundary';
 import { useInputBindings } from '../game/hooks/useInput';
 import { RenderScene } from '../game/entities/RenderScene';
-import { HALF_HEIGHT, HALF_WIDTH } from '../game/constants';
+import { HALF_HEIGHT } from '../game/constants';
 import { CAMERA_ZOOM } from '../game/renderTuning';
 import { useGameStore } from '../game/state/gameStore';
 
@@ -24,6 +25,25 @@ function SceneLoadingFallback() {
       </mesh>
     </>
   );
+}
+
+function ResponsiveOrthoCamera() {
+  const camera = useThree((state) => state.camera);
+  const size = useThree((state) => state.size);
+
+  useLayoutEffect(() => {
+    const ortho = camera as THREE.OrthographicCamera;
+    const aspect = size.height > 0 ? size.width / size.height : 1;
+    const halfWidth = HALF_HEIGHT * aspect;
+
+    ortho.top = HALF_HEIGHT;
+    ortho.bottom = -HALF_HEIGHT;
+    ortho.left = -halfWidth;
+    ortho.right = halfWidth;
+    ortho.updateProjectionMatrix();
+  }, [camera, size.height, size.width]);
+
+  return null;
 }
 
 export function GameScreen() {
@@ -47,7 +67,7 @@ export function GameScreen() {
   const canvasDpr = showTouchControls ? ([1, 1.2] as [number, number]) : ([1, 1.5] as [number, number]);
 
   return (
-    <main className="relative h-[100dvh] w-screen overflow-hidden">
+    <main className="relative h-[100dvh] w-screen overflow-hidden bg-black">
       <GameErrorBoundary>
         <Canvas
           orthographic
@@ -56,14 +76,13 @@ export function GameScreen() {
             position: [0, 0, 12],
             near: 0.1,
             far: 100,
-            left: -HALF_WIDTH,
-            right: HALF_WIDTH,
             top: HALF_HEIGHT,
             bottom: -HALF_HEIGHT
           }}
           gl={{ antialias: !showTouchControls, powerPreference: 'high-performance' }}
           dpr={canvasDpr}
         >
+          <ResponsiveOrthoCamera />
           <Suspense fallback={<SceneLoadingFallback />}>
             <RenderScene />
           </Suspense>
