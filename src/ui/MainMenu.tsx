@@ -10,7 +10,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
       <img
         src={MENU_BACKGROUND_URL}
         alt="Main menu background"
-        className="absolute inset-0 h-full w-full object-cover"
+        className="menu-bg-image absolute inset-0 h-full w-full"
         draggable={false}
       />
 

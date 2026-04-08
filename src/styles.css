@@ -27,3 +27,23 @@ body,
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
+
+.menu-bg-image {
+  object-fit: cover;
+  object-position: center center;
+}
+
+@media (max-width: 768px) {
+  .menu-bg-image {
+    object-position: center top;
+    transform: scale(1.06);
+    transform-origin: center top;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .menu-bg-image {
+    transform: scale(1.02);
+    object-position: center center;
+  }
+}
