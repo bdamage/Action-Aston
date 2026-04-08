@@ -9,6 +9,7 @@ import { GameErrorBoundary } from '../ui/GameErrorBoundary';
 import { useInputBindings } from '../game/hooks/useInput';
 import { RenderScene } from '../game/entities/RenderScene';
 import { HALF_HEIGHT, HALF_WIDTH } from '../game/constants';
+import { CAMERA_ZOOM } from '../game/renderTuning';
 import { useGameStore } from '../game/state/gameStore';
 
 function SceneLoadingFallback() {
@@ -49,7 +50,7 @@ export function GameScreen() {
         <Canvas
           orthographic
           camera={{
-            zoom: 1,
+            zoom: CAMERA_ZOOM,
             position: [0, 0, 12],
             near: 0.1,
             far: 100,

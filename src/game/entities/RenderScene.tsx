@@ -1,9 +1,10 @@
-import { useLoader } from '@react-three/fiber';
+import { useLoader, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { AtlasPlane } from '../../components/AtlasPlane';
 import { Starfield } from '../../components/Starfield';
 import { atlas, type SpriteKey } from '../../assets/assetConfig';
+import { DRAW_SIZES, getDpiSpriteScaleMultiplier, SPRITE_SCALE } from '../renderTuning';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameStore } from '../state/gameStore';
 
@@ -13,14 +14,17 @@ function explosionFrame(index: number) {
   return 'explosion03' as const;
 }
 
-const SPRITE_SCALE = 0.35;
-
-function scaledSize(width: number, height: number): [number, number] {
-  return [width * SPRITE_SCALE, height * SPRITE_SCALE];
+function scaledSize(width: number, height: number, spriteScaleMultiplier: number): [number, number] {
+  return [width * SPRITE_SCALE * spriteScaleMultiplier, height * SPRITE_SCALE * spriteScaleMultiplier];
 }
 
 export function RenderScene() {
   useGameLoop();
+  const effectiveDpr = useThree((state) => state.viewport.dpr);
+  const spriteScaleMultiplier = useMemo(
+    () => getDpiSpriteScaleMultiplier(effectiveDpr),
+    [effectiveDpr]
+  );
 
   const baseTexture = useLoader(THREE.TextureLoader, atlas.url);
   const textures = useMemo(() => {
@@ -61,7 +65,8 @@ export function RenderScene() {
       <AtlasPlane
         texture={textures.player}
         position={[player.position.x, player.position.y, 0]}
-        size={scaledSize(1.15, 1.15)}
+        size={scaledSize(DRAW_SIZES.player.w, DRAW_SIZES.player.h, spriteScaleMultiplier)}
+        rotationZ={Math.PI}
       />
 
       {enemies.map((enemy) => (
@@ -69,7 +74,8 @@ export function RenderScene() {
           key={enemy.id}
           texture={textures[enemy.type]}
           position={[enemy.position.x, enemy.position.y, 0]}
-          size={scaledSize(0.95, 0.95)}
+          size={scaledSize(DRAW_SIZES.enemy.w, DRAW_SIZES.enemy.h, spriteScaleMultiplier)}
+          rotationZ={Math.PI}
         />
       ))}
 
@@ -78,7 +84,7 @@ export function RenderScene() {
           key={projectile.id}
           texture={projectile.from === 'player' ? textures.laserBlue : textures.laserRed}
           position={[projectile.position.x, projectile.position.y, 0]}
-          size={scaledSize(0.28, 0.58)}
+          size={scaledSize(DRAW_SIZES.projectile.w, DRAW_SIZES.projectile.h, spriteScaleMultiplier)}
           tint={projectile.from === 'player' ? '#8ff8ff' : '#ff8d8d'}
         />
       ))}
@@ -96,7 +102,7 @@ export function RenderScene() {
                   : textures.pickupBoost
           }
           position={[pickup.position.x, pickup.position.y, 0]}
-          size={scaledSize(0.72, 0.72)}
+          size={scaledSize(DRAW_SIZES.pickup.w, DRAW_SIZES.pickup.h, spriteScaleMultiplier)}
         />
       ))}
 
@@ -105,7 +111,7 @@ export function RenderScene() {
           key={explosion.id}
           texture={textures[explosionFrame(index)]}
           position={[explosion.position.x, explosion.position.y, 0]}
-          size={scaledSize(explosion.scale, explosion.scale)}
+          size={scaledSize(explosion.scale, explosion.scale, spriteScaleMultiplier)}
           opacity={explosion.ttl / explosion.maxTtl}
         />
       ))}

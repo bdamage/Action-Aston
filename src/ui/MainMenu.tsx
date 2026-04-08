@@ -1,7 +1,15 @@
+import { useEffect, useMemo, useState } from 'react';
 import { atlas, type SpriteKey } from '../assets/assetConfig';
+import { WORLD_HEIGHT, WORLD_WIDTH } from '../game/constants';
+import { CAMERA_ZOOM, DRAW_SIZES, SPRITE_SCALE } from '../game/renderTuning';
 
 interface MainMenuProps {
   onStart: () => void;
+}
+
+interface ViewportMetrics {
+  width: number;
+  height: number;
 }
 
 const CLIP_ORDER: SpriteKey[] = [
@@ -64,6 +72,40 @@ function SpriteClipPreview({ sprite }: { sprite: SpriteKey }) {
 
 export function MainMenu({ onStart }: MainMenuProps) {
   const atlasScale = 0.19;
+  const [viewport, setViewport] = useState<ViewportMetrics>({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1280,
+    height: typeof window !== 'undefined' ? window.innerHeight : 720
+  });
+
+  useEffect(() => {
+    const update = () => {
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const diagnostics = useMemo(() => {
+    const worldWidthVisible = WORLD_WIDTH / CAMERA_ZOOM;
+    const worldHeightVisible = WORLD_HEIGHT / CAMERA_ZOOM;
+    const pxPerUnitX = viewport.width / worldWidthVisible;
+    const pxPerUnitY = viewport.height / worldHeightVisible;
+
+    const playerWidthWorld = DRAW_SIZES.player.w * SPRITE_SCALE;
+    const enemyWidthWorld = DRAW_SIZES.enemy.w * SPRITE_SCALE;
+    const pickupWidthWorld = DRAW_SIZES.pickup.w * SPRITE_SCALE;
+
+    return {
+      worldWidthVisible,
+      worldHeightVisible,
+      pxPerUnitX,
+      pxPerUnitY,
+      playerWidthPx: playerWidthWorld * pxPerUnitX,
+      enemyWidthPx: enemyWidthWorld * pxPerUnitX,
+      pickupWidthPx: pickupWidthWorld * pxPerUnitX
+    };
+  }, [viewport.width, viewport.height]);
 
   return (
     <div className="absolute inset-0 z-30 bg-black/60 p-3 sm:p-5">
@@ -114,7 +156,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 lg:grid-cols-[1fr,1fr,1.4fr]">
           <button
             type="button"
             onClick={onStart}
@@ -124,6 +166,19 @@ export function MainMenu({ onStart }: MainMenuProps) {
           </button>
           <div className="flex items-center justify-center rounded-xl border border-cyan-200/20 bg-black/30 px-3 py-2 text-center text-xs text-cyan-100/90">
             Om en ruta ser fel ut i inspectorpanelen, justera koordinater i src/assets/assetConfig.ts.
+          </div>
+          <div className="rounded-xl border border-amber-200/30 bg-black/35 p-3 text-[11px] text-amber-100/90">
+            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-200">Size Diagnostics</div>
+            <div>Viewport: {Math.round(viewport.width)} x {Math.round(viewport.height)} px</div>
+            <div>Camera zoom: {CAMERA_ZOOM.toFixed(2)}</div>
+            <div>Visible world: {diagnostics.worldWidthVisible.toFixed(2)} x {diagnostics.worldHeightVisible.toFixed(2)} units</div>
+            <div>Px per unit: x {diagnostics.pxPerUnitX.toFixed(1)} | y {diagnostics.pxPerUnitY.toFixed(1)}</div>
+            <div className="mt-2">Player width: ~{diagnostics.playerWidthPx.toFixed(0)} px</div>
+            <div>Enemy width: ~{diagnostics.enemyWidthPx.toFixed(0)} px</div>
+            <div>Pickup width: ~{diagnostics.pickupWidthPx.toFixed(0)} px</div>
+            <div className="mt-2 text-amber-200/80">
+              Guideline: player around 48-72 px and enemies around 38-60 px usually feels readable without dominating screen space.
+            </div>
           </div>
         </div>
       </div>
