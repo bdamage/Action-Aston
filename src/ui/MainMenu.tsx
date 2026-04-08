@@ -1,18 +1,22 @@
-import menuBackgroundUrl from '../../sprites.png';
+import { useState } from 'react';
+import spritesFallbackUrl from '../../sprites.png';
 
-const MENU_BACKGROUND_URL = menuBackgroundUrl;
+const MENU_BACKGROUND_URL = '/menu-background.png';
 
 interface MainMenuProps {
   onStart: () => void;
 }
 
 export function MainMenu({ onStart }: MainMenuProps) {
+  const [bgSrc, setBgSrc] = useState(MENU_BACKGROUND_URL);
+
   return (
     <div className="absolute inset-0 z-30 overflow-hidden">
       <img
-        src={MENU_BACKGROUND_URL}
+        src={bgSrc}
         alt="Main menu background"
         className="menu-bg-image absolute inset-0 h-full w-full"
+        onError={() => setBgSrc(spritesFallbackUrl)}
         draggable={false}
       />
 
