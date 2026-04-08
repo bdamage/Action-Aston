@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import {sql} from "@vercel/postgres";
 
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 25;
@@ -15,15 +15,15 @@ type LeaderboardEntry = {
 };
 
 function sanitizeName(input: unknown) {
-  if (typeof input !== 'string') {
-    return '';
+  if (typeof input !== "string") {
+    return "";
   }
 
-  return input.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME_LENGTH);
+  return input.replace(/\s+/g, " ").trim().slice(0, MAX_NAME_LENGTH);
 }
 
 function normalizeLimit(rawLimit: unknown) {
-  if (typeof rawLimit !== 'string') {
+  if (typeof rawLimit !== "string") {
     return DEFAULT_LIMIT;
   }
 
@@ -48,7 +48,7 @@ function toIsoString(value: unknown) {
   if (value instanceof Date) {
     return value.toISOString();
   }
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     const parsed = new Date(value);
     if (!Number.isNaN(parsed.getTime())) {
       return parsed.toISOString();
@@ -69,7 +69,7 @@ async function ensureLeaderboardTable() {
 }
 
 async function fetchTopEntries(limit: number) {
-  const { rows } = await sql<{
+  const {rows} = await sql<{
     id: number | string;
     name: string;
     score: number;
@@ -109,22 +109,24 @@ export default async function handler(req: any, res: any) {
   try {
     await ensureLeaderboardTable();
 
-    if (req.method === 'GET') {
+    if (req.method === "GET") {
       const limit = normalizeLimit(req.query?.limit);
       const entries = await fetchTopEntries(limit);
-      return sendJson(res, 200, { entries });
+      return sendJson(res, 200, {entries});
     }
 
-    if (req.method === 'POST') {
+    if (req.method === "POST") {
       const name = sanitizeName(req.body?.name);
       const score = Number(req.body?.score);
 
       if (name.length < MIN_NAME_LENGTH) {
-        return sendJson(res, 400, { message: `Name must be at least ${MIN_NAME_LENGTH} characters.` });
+        return sendJson(res, 400, {
+          message: `Name must be at least ${MIN_NAME_LENGTH} characters.`,
+        });
       }
 
       if (!Number.isFinite(score) || score < 0 || score > MAX_SCORE) {
-        return sendJson(res, 400, { message: 'Score is invalid.' });
+        return sendJson(res, 400, {message: "Score is invalid."});
       }
 
       await sql`
@@ -134,14 +136,15 @@ export default async function handler(req: any, res: any) {
 
       await pruneEntries();
       const entries = sortLeaderboard(await fetchTopEntries(DEFAULT_LIMIT));
-      return sendJson(res, 200, { entries });
+      return sendJson(res, 200, {entries});
     }
 
-    res.setHeader('Allow', 'GET, POST');
-    return sendJson(res, 405, { message: 'Method not allowed.' });
+    res.setHeader("Allow", "GET, POST");
+    return sendJson(res, 405, {message: "Method not allowed."});
   } catch {
     return sendJson(res, 503, {
-      message: 'Leaderboard storage is unavailable. Verify Vercel Postgres is connected.',
+      message:
+        "Leaderboard storage is unavailable. Verify Vercel Postgres is connected.",
     });
   }
 }

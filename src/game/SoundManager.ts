@@ -82,15 +82,21 @@ class SoundManager {
   }
 
   private applyMusicVolume() {
-    for (const [track, howl] of Object.entries(this.music) as [MusicTrack, Howl][]) {
+    for (const [track, howl] of Object.entries(this.music) as [
+      MusicTrack,
+      Howl,
+    ][]) {
       howl.volume(this.baseMusicVolume[track] * this.musicVolume);
     }
   }
 
   private applySfxVolume() {
-    if (this.shoot) this.shoot.volume(this.baseSfxVolume.shoot * this.sfxVolume);
-    if (this.explosion) this.explosion.volume(this.baseSfxVolume.explosion * this.sfxVolume);
-    if (this.pickup) this.pickup.volume(this.baseSfxVolume.pickup * this.sfxVolume);
+    if (this.shoot)
+      this.shoot.volume(this.baseSfxVolume.shoot * this.sfxVolume);
+    if (this.explosion)
+      this.explosion.volume(this.baseSfxVolume.explosion * this.sfxVolume);
+    if (this.pickup)
+      this.pickup.volume(this.baseSfxVolume.pickup * this.sfxVolume);
   }
 
   getSettings(): AudioSettings {
@@ -149,7 +155,10 @@ class SoundManager {
       return;
     }
 
-    for (const [key, sound] of Object.entries(this.music) as [MusicTrack, Howl][]) {
+    for (const [key, sound] of Object.entries(this.music) as [
+      MusicTrack,
+      Howl,
+    ][]) {
       if (key !== track && sound.playing()) {
         sound.stop();
       }
