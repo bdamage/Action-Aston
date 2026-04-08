@@ -1,19 +1,19 @@
-import atlasUrl from '../../sprites.png';
+import atlasUrl from "../../sprites.png";
 
 export type SpriteKey =
-  | 'player'
-  | 'enemy01'
-  | 'enemy02'
-  | 'enemy03'
-  | 'laserBlue'
-  | 'laserRed'
-  | 'pickupHealth'
-  | 'pickupShield'
-  | 'pickupAmmo'
-  | 'pickupBoost'
-  | 'explosion01'
-  | 'explosion02'
-  | 'explosion03';
+  | "player"
+  | "enemy01"
+  | "enemy02"
+  | "enemy03"
+  | "laserBlue"
+  | "laserRed"
+  | "pickupHealth"
+  | "pickupShield"
+  | "pickupAmmo"
+  | "pickupBoost"
+  | "explosion01"
+  | "explosion02"
+  | "explosion03";
 
 export interface FrameRect {
   x: number;
@@ -22,16 +22,8 @@ export interface FrameRect {
   h: number;
 }
 
-const cellW = 256;
-const cellH = 256;
-
-function frame(col: number, row: number): FrameRect {
-  return {
-    x: col * cellW,
-    y: row * cellH,
-    w: cellW,
-    h: cellH
-  };
+function frame(x: number, y: number, w: number, h: number): FrameRect {
+  return {x, y, w, h};
 }
 
 export const atlas = {
@@ -39,32 +31,32 @@ export const atlas = {
   width: 1024,
   height: 1536,
   placeholders: {
-    playerShip: '/assets/player-ship.png',
-    enemy01: '/assets/enemy-01.png',
-    enemy02: '/assets/enemy-02.png',
-    enemy03: '/assets/enemy-03.png',
-    laserBlue: '/assets/laser-blue.png',
-    laserRed: '/assets/laser-red.png',
-    pickupHealth: '/assets/pickup-health.png',
-    pickupShield: '/assets/pickup-shield.png',
-    pickupAmmo: '/assets/pickup-ammo.png',
-    explosion01: '/assets/explosion-01.png',
-    explosion02: '/assets/explosion-02.png',
-    explosion03: '/assets/explosion-03.png'
+    playerShip: "/assets/player-ship.png",
+    enemy01: "/assets/enemy-01.png",
+    enemy02: "/assets/enemy-02.png",
+    enemy03: "/assets/enemy-03.png",
+    laserBlue: "/assets/laser-blue.png",
+    laserRed: "/assets/laser-red.png",
+    pickupHealth: "/assets/pickup-health.png",
+    pickupShield: "/assets/pickup-shield.png",
+    pickupAmmo: "/assets/pickup-ammo.png",
+    explosion01: "/assets/explosion-01.png",
+    explosion02: "/assets/explosion-02.png",
+    explosion03: "/assets/explosion-03.png",
   },
   frames: {
-    player: frame(0, 0),
-    enemy01: frame(1, 0),
-    enemy02: frame(2, 0),
-    enemy03: frame(3, 0),
-    laserBlue: frame(0, 1),
-    laserRed: frame(1, 1),
-    pickupHealth: frame(2, 1),
-    pickupShield: frame(3, 1),
-    pickupAmmo: frame(0, 2),
-    pickupBoost: frame(1, 2),
-    explosion01: frame(2, 2),
-    explosion02: frame(3, 2),
-    explosion03: frame(0, 3)
-  } satisfies Record<SpriteKey, FrameRect>
+    player: frame(72, 211, 184, 166),
+    enemy01: frame(302, 210, 186, 168),
+    enemy02: frame(536, 206, 183, 172),
+    enemy03: frame(765, 205, 184, 174),
+    laserBlue: frame(72, 483, 196, 122),
+    laserRed: frame(301, 484, 188, 122),
+    pickupHealth: frame(515, 495, 95, 94),
+    pickupShield: frame(761, 472, 122, 122),
+    pickupAmmo: frame(610, 497, 125, 92),
+    pickupBoost: frame(885, 474, 89, 118),
+    explosion01: frame(66, 870, 170, 120),
+    explosion02: frame(66, 1088, 170, 120),
+    explosion03: frame(66, 1308, 170, 120),
+  } satisfies Record<SpriteKey, FrameRect>,
 };

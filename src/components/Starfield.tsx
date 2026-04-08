@@ -1,17 +1,21 @@
 import { useMemo } from 'react';
 import { HALF_HEIGHT, HALF_WIDTH } from '../game/constants';
 
-export function Starfield() {
+interface StarfieldProps {
+  density?: number;
+}
+
+export function Starfield({ density = 120 }: StarfieldProps) {
   const stars = useMemo(
     () =>
-      Array.from({ length: 120 }, () => ({
+      Array.from({ length: density }, () => ({
         x: (Math.random() * 2 - 1) * HALF_WIDTH,
         y: (Math.random() * 2 - 1) * HALF_HEIGHT,
         z: -0.2 - Math.random() * 0.5,
         size: 0.02 + Math.random() * 0.08,
         alpha: 0.25 + Math.random() * 0.45
       })),
-    []
+    [density]
   );
 
   return (

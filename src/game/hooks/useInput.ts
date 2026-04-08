@@ -1,29 +1,76 @@
-import { useEffect } from 'react';
-import { useGameStore } from '../state/gameStore';
+import {useEffect} from "react";
+import {useGameStore} from "../state/gameStore";
 
 export function useInputBindings() {
-  const setMovement = useGameStore((state) => state.setMovement);
-  const setShooting = useGameStore((state) => state.setShooting);
-
   useEffect(() => {
+    const store = useGameStore;
     const keys = new Set<string>();
+    const interactiveTags = new Set(["INPUT", "TEXTAREA", "SELECT", "BUTTON"]);
 
     const updateMovement = () => {
-      const x = (keys.has('arrowright') || keys.has('d') ? 1 : 0) -
-        (keys.has('arrowleft') || keys.has('a') ? 1 : 0);
-      const y = (keys.has('arrowup') || keys.has('w') ? 1 : 0) -
-        (keys.has('arrowdown') || keys.has('s') ? 1 : 0);
-      setMovement({ x, y });
+      const x =
+        (keys.has("arrowright") || keys.has("d") ? 1 : 0) -
+        (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
+      const y =
+        (keys.has("arrowup") || keys.has("w") ? 1 : 0) -
+        (keys.has("arrowdown") || keys.has("s") ? 1 : 0);
+      store.getState().setMovement({x, y});
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', ' '].includes(key)) {
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (interactiveTags.has(target.tagName) || target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (
+        [
+          "arrowup",
+          "arrowdown",
+          "arrowleft",
+          "arrowright",
+          "w",
+          "a",
+          "s",
+          "d",
+          " ",
+          "enter",
+          "escape",
+          "p",
+        ].includes(key)
+      ) {
         event.preventDefault();
       }
+
+      const state = store.getState();
+      if (key === "enter") {
+        if (state.phase === "menu") {
+          state.startGame();
+          return;
+        }
+        if (state.phase === "gameover") {
+          state.restartGame();
+          return;
+        }
+      }
+      if (key === "escape" || key === "p") {
+        if (state.phase === "playing") {
+          state.setPhase("paused");
+          return;
+        }
+        if (state.phase === "paused") {
+          state.setPhase("playing");
+          return;
+        }
+      }
+
       keys.add(key);
-      if (key === ' ') {
-        setShooting(true);
+      if (key === " ") {
+        store.getState().setShooting(true);
       }
       updateMovement();
     };
@@ -31,27 +78,27 @@ export function useInputBindings() {
     const onKeyUp = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       keys.delete(key);
-      if (key === ' ') {
-        setShooting(false);
+      if (key === " ") {
+        store.getState().setShooting(false);
       }
       updateMovement();
     };
 
-    const onMouseDown = () => setShooting(true);
-    const onMouseUp = () => setShooting(false);
+    const onMouseDown = () => store.getState().setShooting(true);
+    const onMouseUp = () => store.getState().setShooting(false);
 
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    window.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mouseup", onMouseUp);
 
     return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mouseup', onMouseUp);
-      setMovement({ x: 0, y: 0 });
-      setShooting(false);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mouseup", onMouseUp);
+      store.getState().setMovement({x: 0, y: 0});
+      store.getState().setShooting(false);
     };
-  }, [setMovement, setShooting]);
+  }, []);
 }
