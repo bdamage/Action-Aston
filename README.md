@@ -21,32 +21,13 @@ npm run build
 npm run preview
 ```
 
-## Central Leaderboard (Vercel)
+## Leaderboard Storage
 
-This project now includes a centralized leaderboard API at `/api/leaderboard`.
+Leaderboard data is currently stored in browser localStorage under the key `action-aston:leaderboard:v1`.
 
-1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. In Vercel, add a **Postgres** database to this project.
-3. Vercel will provide these environment variables automatically:
-- `POSTGRES_URL`
-4. Redeploy.
-
-`GET /api/leaderboard?limit=10` returns top scores.
-`POST /api/leaderboard` accepts JSON like:
-
-```json
-{
-	"name": "Pilot",
-	"score": 4200
-}
-```
-
-Local development can use a Vercel-linked environment (`vercel env pull`) if you want local API writes to hit the same Postgres backend.
+- Scores are stored per-browser and per-device.
+- Clearing browser data will reset the leaderboard.
+- No backend setup is required in this mode.
 
 ## Sprite Atlas
 
