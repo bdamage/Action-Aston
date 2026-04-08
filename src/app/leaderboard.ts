@@ -9,11 +9,16 @@ const STORAGE_KEY = "action-aston:leaderboard:v1";
 const MAX_STORED_ENTRIES = 100;
 
 function canUseStorage() {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  return (
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined"
+  );
 }
 
 function safeId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
@@ -81,14 +86,18 @@ function writeStoredEntries(entries: LeaderboardEntry[]) {
     return;
   }
 
-  const sanitized = sortEntries(normalizeEntries(entries)).slice(0, MAX_STORED_ENTRIES);
+  const sanitized = sortEntries(normalizeEntries(entries)).slice(
+    0,
+    MAX_STORED_ENTRIES,
+  );
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
 }
 
 export async function fetchLeaderboard(
   limit = 10,
 ): Promise<LeaderboardEntry[]> {
-  const normalizedLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 10;
+  const normalizedLimit =
+    Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 10;
   return readStoredEntries().slice(0, normalizedLimit);
 }
 
@@ -114,7 +123,10 @@ export async function submitScore(
     score: normalizedScore,
     createdAt: new Date().toISOString(),
   };
-  const nextEntries = sortEntries([...current, nextEntry]).slice(0, MAX_STORED_ENTRIES);
+  const nextEntries = sortEntries([...current, nextEntry]).slice(
+    0,
+    MAX_STORED_ENTRIES,
+  );
   writeStoredEntries(nextEntries);
   return nextEntries.slice(0, 10);
 }
