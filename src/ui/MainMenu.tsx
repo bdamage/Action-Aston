@@ -1,4 +1,6 @@
-const MENU_BACKGROUND_URL = '/dist/assets/image.png';
+import menuBackgroundUrl from '../../sprites.png';
+
+const MENU_BACKGROUND_URL = menuBackgroundUrl;
 
 interface MainMenuProps {
   onStart: () => void;
@@ -20,7 +22,7 @@ export function MainMenu({ onStart }: MainMenuProps) {
         <div className="mx-auto w-full max-w-3xl rounded-2xl border border-cyan-200/25 bg-black/55 p-4 shadow-glow backdrop-blur-md sm:p-6">
           <h1 className="text-center text-2xl font-black uppercase tracking-[0.18em] text-cyan-100 sm:text-4xl">Action Aston</h1>
           <p className="mt-3 text-center text-sm text-slate-200">
-            New background active. Main menu is now anchored to the lower part of the screen.
+            Main menu is anchored to the lower part of the screen.
           </p>
 
           <button
