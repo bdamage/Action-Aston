@@ -1,7 +1,17 @@
-export type GamePhase = 'menu' | 'playing' | 'paused' | 'gameover';
+import type {SpriteAlignmentTuning} from "./renderTuning";
 
-export type EnemyType = 'enemy01' | 'enemy02' | 'enemy03';
-export type PickupType = 'health' | 'shield' | 'ammo' | 'boost';
+export type GamePhase =
+  | "menu"
+  | "alignment"
+  | "playing"
+  | "paused"
+  | "gameover";
+
+export type AlignmentSpriteKey = "player" | "enemy" | "projectile" | "pickup";
+export type AlignmentField = "w" | "h" | "radius";
+
+export type EnemyType = "enemy01" | "enemy02" | "enemy03";
+export type PickupType = "health" | "shield" | "ammo" | "boost";
 
 export interface Vector2 {
   x: number;
@@ -35,7 +45,7 @@ export interface Enemy {
 
 export interface Projectile {
   id: number;
-  from: 'player' | 'enemy';
+  from: "player" | "enemy";
   position: Vector2;
   velocity: Vector2;
   radius: number;
@@ -80,4 +90,5 @@ export interface GameState {
   pickups: Pickup[];
   explosions: Explosion[];
   input: InputState;
+  alignment: SpriteAlignmentTuning;
 }

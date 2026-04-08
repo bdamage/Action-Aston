@@ -33,6 +33,27 @@ body,
   object-position: center center;
 }
 
+.menu-logo-float {
+  animation: menu-logo-float 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes menu-logo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-logo-float {
+    animation: none;
+  }
+}
+
 @media (max-width: 768px) {
   .menu-bg-image {
     object-position: center top;

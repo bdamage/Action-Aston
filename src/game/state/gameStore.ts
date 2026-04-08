@@ -1,5 +1,6 @@
 import {create} from "zustand";
 import {HALF_HEIGHT, HALF_WIDTH, PLAYER_BASE} from "../constants";
+import {cloneAlignmentTuning} from "../renderTuning";
 import {clamp, intersects} from "../systems/collisionSystem";
 import {maybeCreatePickup} from "../systems/pickupSystem";
 import {
@@ -9,6 +10,8 @@ import {
 import {updateSpawnTimer} from "../systems/spawnSystem";
 import {soundManager} from "../SoundManager";
 import type {
+  AlignmentField,
+  AlignmentSpriteKey,
   Enemy,
   Explosion,
   GamePhase,
@@ -20,14 +23,22 @@ import type {
 
 interface GameStore extends GameState {
   startGame: () => void;
+  startAlignment: () => void;
   restartGame: () => void;
   setPhase: (phase: GamePhase) => void;
+  setAlignmentValue: (
+    sprite: AlignmentSpriteKey,
+    field: AlignmentField,
+    value: number,
+  ) => void;
+  resetAlignment: () => void;
   setMovement: (movement: Vector2) => void;
   setShooting: (shooting: boolean) => void;
   step: (dt: number) => void;
 }
 
 function createBaseState(): GameState {
+  const alignment = cloneAlignmentTuning();
   return {
     phase: "menu",
     score: 0,
@@ -39,11 +50,16 @@ function createBaseState(): GameState {
     nextProjectileId: 1,
     nextPickupId: 1,
     nextExplosionId: 1,
-    player: {...PLAYER_BASE, position: {...PLAYER_BASE.position}},
+    player: {
+      ...PLAYER_BASE,
+      position: {...PLAYER_BASE.position},
+      radius: alignment.player.radius,
+    },
     enemies: [],
     projectiles: [],
     pickups: [],
     explosions: [],
+    alignment,
     input: {
       movement: {x: 0, y: 0},
       shooting: false,
@@ -73,20 +89,71 @@ export const useGameStore = create<GameStore>((set, get) => ({
       input: {...state.input, shooting},
     })),
   setPhase: (phase) => set({phase}),
+  setAlignmentValue: (sprite, field, value) =>
+    set((state) => {
+      const nextAlignment = {
+        ...state.alignment,
+        [sprite]: {
+          ...state.alignment[sprite],
+          [field]: value,
+        },
+      };
+
+      return {
+        alignment: nextAlignment,
+        player:
+          sprite === "player" && field === "radius"
+            ? {...state.player, radius: value}
+            : state.player,
+      };
+    }),
+  resetAlignment: () =>
+    set((state) => {
+      const alignment = cloneAlignmentTuning();
+      return {
+        alignment,
+        player: {...state.player, radius: alignment.player.radius},
+      };
+    }),
   startGame: () =>
     set((state) => {
       if (state.phase === "playing") {
         return state;
       }
+      const base = createBaseState();
       return {
-        ...createBaseState(),
+        ...base,
+        alignment: state.alignment,
+        player: {
+          ...base.player,
+          radius: state.alignment.player.radius,
+        },
         phase: "playing",
       };
     }),
-  restartGame: () =>
-    set({
+  startAlignment: () =>
+    set((state) => ({
       ...createBaseState(),
-      phase: "playing",
+      phase: "alignment",
+      alignment: state.alignment,
+      player: {
+        ...PLAYER_BASE,
+        position: {x: 0, y: 0},
+        radius: state.alignment.player.radius,
+      },
+    })),
+  restartGame: () =>
+    set((state) => {
+      const base = createBaseState();
+      return {
+        ...base,
+        phase: "playing",
+        alignment: state.alignment,
+        player: {
+          ...base.player,
+          radius: state.alignment.player.radius,
+        },
+      };
     }),
   step: (dt) => {
     const frameDt = dt * SIMULATION_SPEED;
@@ -101,6 +168,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const player = {
       ...state.player,
       position: {...state.player.position},
+      radius: state.alignment.player.radius,
       shootCooldown: Math.max(0, state.player.shootCooldown - frameDt),
       boostTimer: Math.max(0, state.player.boostTimer - frameDt),
     };
@@ -139,7 +207,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             y: player.position.y + 0.52,
           },
           velocity: {x: 0, y: 14},
-          radius: 0.15,
+          radius: state.alignment.projectile.radius,
           damage: player.boostTimer > 0 ? 20 : 12,
         });
       }
@@ -190,7 +258,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           from: "enemy",
           position: {x: enemy.position.x, y: enemy.position.y - 0.3},
           velocity: {x: dx * inv * 6.5, y: dy * inv * 6.5},
-          radius: 0.16,
+          radius: state.alignment.projectile.radius,
           damage: 9 + nextDifficulty,
         });
         enemy.fireCooldown =
@@ -250,6 +318,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
             nextPickupId++,
             enemy.position.x,
             enemy.position.y,
+            0.27,
+            state.alignment.pickup.radius,
           );
           if (maybePickup) {
             pickups.push(maybePickup);
