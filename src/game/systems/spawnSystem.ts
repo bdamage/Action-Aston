@@ -155,7 +155,8 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
         state.difficulty * 0.16 +
         nextWave * 0.02,
       trackStrength:
-        rand(pattern.trackMin, pattern.trackMax) + Math.min(0.35, nextWave * 0.02),
+        rand(pattern.trackMin, pattern.trackMax) +
+        Math.min(0.35, nextWave * 0.02),
       fireCooldown: rand(pattern.fireMin, pattern.fireMax),
       hitFlash: 0,
     });
