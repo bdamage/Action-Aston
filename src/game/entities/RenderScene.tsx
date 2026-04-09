@@ -51,6 +51,8 @@ function hitFlashOpacity(hitFlash: number): number {
   return Math.floor(hitFlash * 20) % 2 === 0 ? 0.95 : 0;
 }
 
+const DRAGON_BOSS_SIZE_MULTIPLIER = 2.5;
+
 function BoundsOverlay({
   position,
   width,
@@ -139,7 +141,11 @@ export function RenderScene() {
       return scaledSizeFromTexture(bossTextures.firstBoss, alignment.enemy.h * 2.7, spriteScaleMultiplier);
     }
     if (enemyType === 'thirdBoss') {
-      return scaledSizeFromTexture(bossTextures.thirdBoss, alignment.enemy.h * 2.9, spriteScaleMultiplier);
+      return scaledSizeFromTexture(
+        bossTextures.thirdBoss,
+        alignment.enemy.h * 2.9 * DRAGON_BOSS_SIZE_MULTIPLIER,
+        spriteScaleMultiplier
+      );
     }
     if (enemyType === 'finalBoss') {
       return scaledSizeFromTexture(bossTextures.finalBoss, alignment.enemy.h * 3.1, spriteScaleMultiplier);
@@ -154,6 +160,9 @@ export function RenderScene() {
     if (enemyType === 'finalBoss') return bossTextures.finalBoss;
     return textures[enemyType];
   };
+
+  const getEnemyRotation = (enemyType: EnemyType) =>
+    enemyType === 'thirdBoss' ? 0 : Math.PI;
 
   const isTouch = useMemo(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0, []);
   const maxExplosions = isTouch ? 28 : 60;
@@ -261,7 +270,7 @@ export function RenderScene() {
           position={[enemy.position.x, enemy.position.y, 0]}
           size={getEnemySize(enemy.type)}
           flashOpacity={hitFlashOpacity(enemy.hitFlash)}
-          rotationZ={Math.PI}
+          rotationZ={getEnemyRotation(enemy.type)}
         />
       ))}
 

@@ -47,6 +47,13 @@ export function useInputBindings() {
       }
 
       const state = store.getState();
+      const digitMatch = event.code.match(/^Digit([1-9])$/);
+      if (import.meta.env.DEV && digitMatch && !event.repeat) {
+        event.preventDefault();
+        state.quickForwardToBoss(Number(digitMatch[1]));
+        return;
+      }
+
       if (key === "enter") {
         if (state.phase === "menu") {
           state.startGame();

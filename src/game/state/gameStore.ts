@@ -4,8 +4,6 @@ import {
   useGarageStore,
   weaponShootCooldown,
   shieldMaxForLevel,
-  healthMaxForLevel,
-  ammoMaxForLevel,
   startingBoostTimer,
 } from "./garageStore";
 import {cloneAlignmentTuning} from "../renderTuning";
@@ -15,7 +13,7 @@ import {
   buildEnemySpatialIndex,
   getNearbyEnemies,
 } from "../systems/spatialHashSystem";
-import {updateSpawnTimer} from "../systems/spawnSystem";
+import {BOSS_WAVES, updateSpawnTimer} from "../systems/spawnSystem";
 import {soundManager} from "../SoundManager";
 import type {
   AlignmentField,
@@ -46,6 +44,7 @@ interface GameStore extends GameState {
   toggleHitboxes: () => void;
   setMovement: (movement: Vector2) => void;
   setShooting: (shooting: boolean) => void;
+  quickForwardToBoss: (slot: number) => void;
   /** Deducts `amount` from totalCoins if sufficient funds. Returns true on success. */
   spendCoins: (amount: number) => boolean;
   step: (dt: number) => void;
@@ -110,6 +109,14 @@ function normalizeMovement(x: number, y: number) {
   return {x: x / mag, y: y / mag};
 }
 
+function bossWaveForSlot(slot: number) {
+  const index = Math.min(
+    BOSS_WAVES.length - 1,
+    Math.max(0, Math.floor(slot) - 1),
+  );
+  return BOSS_WAVES[index];
+}
+
 const SIMULATION_SPEED = 0.7;
 const HIT_FLASH_DURATION = 0.16;
 const BOSS_HOVER_DOWN_SHIFT = HALF_HEIGHT * 0.2;
@@ -139,6 +146,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       input: {...state.input, shooting},
     })),
+  quickForwardToBoss: (slot) =>
+    set((state) => {
+      if (state.phase !== "playing" && state.phase !== "paused") {
+        return state;
+      }
+
+      const targetBossWave = bossWaveForSlot(slot);
+      if (!targetBossWave || state.wave >= targetBossWave) {
+        return state;
+      }
+
+      return {
+        wave: targetBossWave - 1,
+        spawnTimer: 0,
+        enemies: [],
+        projectiles: [],
+        pickups: [],
+        coins: [],
+        explosions: [],
+        lastFormation: null,
+        input: {
+          ...state.input,
+          movement: {x: 0, y: 0},
+          shooting: false,
+        },
+      };
+    }),
   setPhase: (phase) => set({phase}),
   setAlignmentValue: (sprite, field, value) =>
     set((state) => {
@@ -184,8 +218,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const storedCoins = loadTotalCoins();
       const garage = useGarageStore.getState();
       const maxShield = shieldMaxForLevel(garage.shieldLevel);
-      const maxHealth = healthMaxForLevel(garage.healthLevel);
-      const maxAmmo = ammoMaxForLevel(garage.ammoLevel);
       return {
         ...base,
         totalCoins: storedCoins,
@@ -196,10 +228,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
           baseShootCooldown: weaponShootCooldown(garage.weaponLevel),
           maxShield,
           shield: maxShield,
-          maxHealth,
-          health: maxHealth,
-          maxAmmo,
-          ammo: maxAmmo,
           boostTimer: startingBoostTimer(garage.boostLevel),
         },
         phase: "playing",
@@ -222,8 +250,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const storedCoins = loadTotalCoins();
       const garage = useGarageStore.getState();
       const maxShield = shieldMaxForLevel(garage.shieldLevel);
-      const maxHealth = healthMaxForLevel(garage.healthLevel);
-      const maxAmmo = ammoMaxForLevel(garage.ammoLevel);
       return {
         ...base,
         totalCoins: storedCoins,
@@ -235,10 +261,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
           baseShootCooldown: weaponShootCooldown(garage.weaponLevel),
           maxShield,
           shield: maxShield,
-          maxHealth,
-          health: maxHealth,
-          maxAmmo,
-          ammo: maxAmmo,
           boostTimer: startingBoostTimer(garage.boostLevel),
         },
       };
@@ -252,8 +274,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const nextElapsed = state.elapsed + frameDt;
     const nextDifficulty = 1 + nextElapsed * 0.05;
-
-    let screenShake = Math.max(0, state.screenShake - frameDt);
 
     const player = {
       ...state.player,
@@ -517,7 +537,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         continue;
       enemy.hp = 0;
       player.hitFlash = HIT_FLASH_DURATION;
-      screenShake = HIT_FLASH_DURATION;
       if (player.shield > 0) {
         player.shield = Math.max(0, player.shield - 22);
       } else {
@@ -546,7 +565,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const hitDamage = projectile.damage;
       projectile.damage = 0;
       player.hitFlash = HIT_FLASH_DURATION;
-      screenShake = HIT_FLASH_DURATION;
       if (player.shield > 0) {
         player.shield = Math.max(0, player.shield - hitDamage);
       } else {
@@ -656,7 +674,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       nextPickupId,
       nextExplosionId,
       nextCoinId,
-      screenShake,
       player,
       enemies: aliveEnemies.filter((enemy) => enemy.hp > 0),
       projectiles: activeProjectiles.filter(

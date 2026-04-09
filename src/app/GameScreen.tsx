@@ -261,7 +261,7 @@ export function GameScreen() {
 
       {!showTouchControls && phase === 'menu' && (
         <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-lg border border-cyan-300/30 bg-black/40 px-3 py-2 text-xs text-cyan-100/90 backdrop-blur">
-          Keyboard: WASD/Arrows move, Space shoot, Enter start/restart, Esc/P pause
+          Keyboard: WASD/Arrows move, Space shoot, Enter start/restart, Esc/P pause{isDev ? ', 1-9 jump to boss checkpoints' : ''}
         </div>
       )}
 

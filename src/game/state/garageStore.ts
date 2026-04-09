@@ -15,45 +15,45 @@ export const WEAPON_TIERS: UpgradeTier[] = [
 ];
 
 export const SHIELD_TIERS: UpgradeTier[] = [
-  {name: "Basic Shields", description: "60 max shield", cost: 0},
-  {name: "Reinforced Shields", description: "75 max shield", cost: 500},
-  {name: "Aegis Shields", description: "90 max shield", cost: 1300},
-  {name: "Hardened Shields", description: "110 max shield", cost: 2500},
-  {name: "Dense Shields", description: "135 max shield", cost: 4200},
-  {name: "Reactive Armor", description: "165 max shield", cost: 6500},
-  {name: "Composite Hull", description: "200 max shield", cost: 9500},
-  {name: "Phase Barrier", description: "240 max shield", cost: 13500},
-  {name: "Quantum Shields", description: "285 max shield", cost: 18500},
-  {name: "Nano Armor", description: "340 max shield", cost: 25000},
-  {name: "Divine Shield", description: "400 max shield", cost: 33000},
+  {name: "Basic Shields",       description: "60 max shield",  cost: 0},
+  {name: "Reinforced Shields",  description: "75 max shield",  cost: 500},
+  {name: "Aegis Shields",       description: "90 max shield",  cost: 1300},
+  {name: "Hardened Shields",    description: "110 max shield", cost: 2500},
+  {name: "Dense Shields",       description: "135 max shield", cost: 4200},
+  {name: "Reactive Armor",      description: "165 max shield", cost: 6500},
+  {name: "Composite Hull",      description: "200 max shield", cost: 9500},
+  {name: "Phase Barrier",       description: "240 max shield", cost: 13500},
+  {name: "Quantum Shields",     description: "285 max shield", cost: 18500},
+  {name: "Nano Armor",          description: "340 max shield", cost: 25000},
+  {name: "Divine Shield",       description: "400 max shield", cost: 33000},
 ];
 
 export const HEALTH_TIERS: UpgradeTier[] = [
-  {name: "Standard Hull", description: "100 max health", cost: 0},
-  {name: "Reinforced Hull", description: "120 max health", cost: 400},
-  {name: "Hardened Hull", description: "145 max health", cost: 1100},
-  {name: "Heavy Plating", description: "175 max health", cost: 2200},
-  {name: "Nano Composite", description: "210 max health", cost: 3700},
-  {name: "Bio Armor", description: "250 max health", cost: 5800},
-  {name: "Crystal Skin", description: "295 max health", cost: 8500},
-  {name: "Titan Alloy", description: "345 max health", cost: 12000},
-  {name: "Voidium Plating", description: "400 max health", cost: 16500},
-  {name: "Dark Matter", description: "460 max health", cost: 22500},
-  {name: "Immortal Core", description: "530 max health", cost: 30000},
+  {name: "Standard Hull",    description: "100 max health", cost: 0},
+  {name: "Reinforced Hull",  description: "120 max health", cost: 400},
+  {name: "Hardened Hull",    description: "145 max health", cost: 1100},
+  {name: "Heavy Plating",    description: "175 max health", cost: 2200},
+  {name: "Nano Composite",   description: "210 max health", cost: 3700},
+  {name: "Bio Armor",        description: "250 max health", cost: 5800},
+  {name: "Crystal Skin",     description: "295 max health", cost: 8500},
+  {name: "Titan Alloy",      description: "345 max health", cost: 12000},
+  {name: "Voidium Plating",  description: "400 max health", cost: 16500},
+  {name: "Dark Matter",      description: "460 max health", cost: 22500},
+  {name: "Immortal Core",    description: "530 max health", cost: 30000},
 ];
 
 export const AMMO_TIERS: UpgradeTier[] = [
   {name: "Standard Magazine", description: "220 max ammo", cost: 0},
-  {name: "Extended Mag", description: "265 max ammo", cost: 350},
-  {name: "High-Cap Mag", description: "320 max ammo", cost: 950},
-  {name: "Drum Magazine", description: "385 max ammo", cost: 1900},
-  {name: "Oversize Tank", description: "460 max ammo", cost: 3200},
-  {name: "Energy Cell", description: "545 max ammo", cost: 4900},
-  {name: "Plasma Reservoir", description: "640 max ammo", cost: 7100},
-  {name: "Quantum Cache", description: "745 max ammo", cost: 9800},
-  {name: "Dark Energy Tank", description: "860 max ammo", cost: 13000},
-  {name: "Infinite Coil", description: "985 max ammo", cost: 17500},
-  {name: "Omni Ammo Core", description: "1120 max ammo", cost: 23000},
+  {name: "Extended Mag",      description: "265 max ammo", cost: 350},
+  {name: "High-Cap Mag",      description: "320 max ammo", cost: 950},
+  {name: "Drum Magazine",     description: "385 max ammo", cost: 1900},
+  {name: "Oversize Tank",     description: "460 max ammo", cost: 3200},
+  {name: "Energy Cell",       description: "545 max ammo", cost: 4900},
+  {name: "Plasma Reservoir",  description: "640 max ammo", cost: 7100},
+  {name: "Quantum Cache",     description: "745 max ammo", cost: 9800},
+  {name: "Dark Energy Tank",  description: "860 max ammo", cost: 13000},
+  {name: "Infinite Coil",     description: "985 max ammo", cost: 17500},
+  {name: "Omni Ammo Core",    description: "1120 max ammo", cost: 23000},
 ];
 
 export const BOOST_TIERS: UpgradeTier[] = [
@@ -203,7 +203,8 @@ export const useGarageStore = create<GarageStore>((set, get) => {
       const {ammoLevel} = get();
       const nextLevel = ammoLevel + 1;
       if (nextLevel >= AMMO_TIERS.length) return false;
-      const cost = AMMO_TIERS[nextLevel].cost - AMMO_TIERS[ammoLevel].cost;
+      const cost =
+        AMMO_TIERS[nextLevel].cost - AMMO_TIERS[ammoLevel].cost;
       if (!spendCoins(cost)) return false;
       const updated = {...get(), ammoLevel: nextLevel};
       saveGarage(updated);

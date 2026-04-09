@@ -6,6 +6,11 @@ const LANE_COUNT = 9;
 const FIRST_BOSS_WAVE = 10;
 const THIRD_BOSS_WAVE = 25;
 const FINAL_BOSS_WAVE = 20;
+export const BOSS_WAVES = [
+  FIRST_BOSS_WAVE,
+  FINAL_BOSS_WAVE,
+  THIRD_BOSS_WAVE,
+] as const;
 
 interface WavePattern {
   lanes: number[];

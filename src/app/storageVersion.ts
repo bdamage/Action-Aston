@@ -1,6 +1,9 @@
 const VERSION_KEY = "actionAston_version";
 
-const CLEARABLE_KEYS = ["actionAston_garage", "actionAston_totalCoins"];
+const CLEARABLE_KEYS = [
+  "actionAston_garage",
+  "actionAston_totalCoins",
+];
 
 /**
  * Called once at startup. If the stored app version doesn't match the current
