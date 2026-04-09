@@ -1,6 +1,11 @@
 import {create} from "zustand";
 import {HALF_HEIGHT, HALF_WIDTH, PLAYER_BASE} from "../constants";
-import {useGarageStore, weaponShootCooldown, shieldMaxForLevel, startingBoostTimer} from "./garageStore";
+import {
+  useGarageStore,
+  weaponShootCooldown,
+  shieldMaxForLevel,
+  startingBoostTimer,
+} from "./garageStore";
 import {cloneAlignmentTuning} from "../renderTuning";
 import {clamp, intersects} from "../systems/collisionSystem";
 import {createPickup, maybeCreatePickup} from "../systems/pickupSystem";
@@ -160,11 +165,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   toggleHitboxes: () => set((state) => ({showHitboxes: !state.showHitboxes})),
   spendCoins: (amount) => {
-    const { totalCoins } = get();
+    const {totalCoins} = get();
     if (totalCoins < amount) return false;
     const next = totalCoins - amount;
     saveTotalCoins(next);
-    set({ totalCoins: next });
+    set({totalCoins: next});
     return true;
   },
   startGame: () =>
@@ -280,7 +285,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         });
       }
 
-      player.shootCooldown = player.boostTimer > 0 ? player.baseShootCooldown / 2 : player.baseShootCooldown;
+      player.shootCooldown =
+        player.boostTimer > 0
+          ? player.baseShootCooldown / 2
+          : player.baseShootCooldown;
       player.ammo = Math.max(0, player.ammo - 1);
       soundManager.playShoot();
     }
