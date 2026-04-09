@@ -39,14 +39,14 @@ export const SKIN_OPTIONS: SkinOption[] = [
     name: "Nova Red",
     description: "Fiery red tint",
     color: "#ff7070",
-    cost: 180,
+    cost: 5000,
   },
-  {name: "Emerald", description: "Emerald green", color: "#6bffb8", cost: 180},
+  {name: "Emerald", description: "Emerald green", color: "#6bffb8", cost: 8000},
   {
     name: "Solar Gold",
     description: "Golden chrome",
     color: "#ffd060",
-    cost: 280,
+    cost: 12000,
   },
 ];
 

@@ -429,15 +429,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
             scale: 1.2,
           });
 
-          const maybePickup = maybeCreatePickup(
-            nextPickupId++,
-            enemy.position.x,
-            enemy.position.y,
-            0.27,
-            state.alignment.pickup.radius,
-          );
-          if (maybePickup) {
-            pickups.push(maybePickup);
+          const isLastEnemy = enemies.filter((e) => e.hp > 0).length === 0;
+          if (isLastEnemy) {
+            const maybePickup = maybeCreatePickup(
+              nextPickupId++,
+              enemy.position.x,
+              enemy.position.y,
+              0.27,
+              state.alignment.pickup.radius,
+            );
+            if (maybePickup) {
+              pickups.push(maybePickup);
+            }
           }
 
           if (isBossEnemy(enemy)) {
