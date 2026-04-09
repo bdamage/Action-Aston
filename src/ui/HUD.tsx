@@ -5,6 +5,9 @@ interface HUDProps {
   shield: number;
   ammo: number;
   boost: number;
+  bossName?: string;
+  bossHealth?: number;
+  bossMaxHealth?: number;
   onPause: () => void;
 }
 
@@ -35,7 +38,12 @@ function Meter({
   );
 }
 
-export function HUD({ score, wave, health, shield, ammo, boost, onPause }: HUDProps) {
+export function HUD({ score, wave, health, shield, ammo, boost, bossName, bossHealth, bossMaxHealth, onPause }: HUDProps) {
+  const bossRatio =
+    typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && bossMaxHealth > 0
+      ? Math.max(0, Math.min(1, bossHealth / bossMaxHealth))
+      : 0;
+
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <div className="pointer-events-auto absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] rounded-xl bg-black/45 p-3 text-right backdrop-blur">
@@ -58,6 +66,23 @@ export function HUD({ score, wave, health, shield, ammo, boost, onPause }: HUDPr
         <Meter label="Shield" value={shield} max={60} color="#4c8fff" compact />
         <Meter label="Ammo" value={ammo} max={220} color="#fdd065" compact />
       </div>
+
+      {typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && (
+        <div className="pointer-events-none absolute left-1/2 top-[max(0.75rem,env(safe-area-inset-top))] w-[min(16rem,52vw)] -translate-x-1/2 rounded-lg border border-rose-300/35 bg-black/55 px-3 py-2 backdrop-blur">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-rose-100">
+            <span>{bossName ?? 'Boss'}</span>
+            <span>
+              {Math.ceil(Math.max(0, bossHealth))} / {Math.ceil(Math.max(0, bossMaxHealth))} HP
+            </span>
+          </div>
+          <div className="mt-1 h-2.5 w-full overflow-hidden rounded bg-black/50">
+            <div
+              className="h-full rounded bg-rose-400"
+              style={{ width: `${bossRatio * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="pointer-events-auto absolute bottom-[max(5.8rem,env(safe-area-inset-bottom))] right-3 w-[min(13rem,36vw)] rounded-xl bg-black/45 p-3 backdrop-blur">
         <div className="text-xs uppercase tracking-wider text-slate-300">Boost</div>

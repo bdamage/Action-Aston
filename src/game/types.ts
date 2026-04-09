@@ -44,6 +44,7 @@ export interface Enemy {
   position: Vector2;
   radius: number;
   hp: number;
+  maxHp: number;
   speed: number;
   trackStrength: number;
   fireCooldown: number;

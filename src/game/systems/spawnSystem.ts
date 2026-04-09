@@ -62,6 +62,21 @@ function rand(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
+function randInt(min: number, max: number) {
+  return Math.floor(rand(min, max + 1));
+}
+
+function shuffled<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const a = copy[i];
+    copy[i] = copy[j];
+    copy[j] = a;
+  }
+  return copy;
+}
+
 function laneToX(laneIndex: number) {
   const normalized = laneIndex / (LANE_COUNT - 1);
   return -HALF_WIDTH + 1 + normalized * (HALF_WIDTH * 2 - 2);
@@ -70,13 +85,15 @@ function laneToX(laneIndex: number) {
 function spawnBoss(state: GameState, type: EnemyType): Enemy {
   const isFinal = type === "finalBoss";
   const baseHp = isFinal ? 820 : 520;
+  const hp = Math.floor(baseHp + state.difficulty * (isFinal ? 70 : 48));
 
   return {
     id: state.nextEnemyId++,
     type,
     position: {x: 0, y: HALF_HEIGHT + 2.2},
     radius: state.alignment.enemy.radius * (isFinal ? 2.5 : 2.1),
-    hp: Math.floor(baseHp + state.difficulty * (isFinal ? 70 : 48)),
+    hp,
+    maxHp: hp,
     speed: isFinal ? 0.9 : 1.1,
     trackStrength: isFinal ? 0.65 : 0.55,
     fireCooldown: isFinal ? 0.7 : 0.95,
@@ -114,29 +131,31 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
     6,
     2 + Math.floor(nextWave / 3) + Math.floor(state.difficulty / 3.2),
   );
+  const randomizedLanes = shuffled(pattern.lanes);
   const spawned: Enemy[] = [];
 
   for (let i = 0; i < enemyCount; i += 1) {
-    const lane = pattern.lanes[i % pattern.lanes.length];
+    const lane = randomizedLanes[i % randomizedLanes.length];
     const row = Math.floor(i / pattern.lanes.length);
-    const type = ENEMY_TYPES[(nextWave + i) % ENEMY_TYPES.length];
+    const type = ENEMY_TYPES[randInt(0, ENEMY_TYPES.length - 1)];
+    const hp = Math.floor((22 + state.difficulty * 6.5) * pattern.hpScale);
 
     spawned.push({
       id: state.nextEnemyId++,
       type,
       position: {
-        x: laneToX(lane) + rand(-0.12, 0.12),
+        x: laneToX(lane) + rand(-0.2, 0.2),
         y: HALF_HEIGHT + 0.7 + row * 1.15 + rand(0.08, 0.35),
       },
       radius: state.alignment.enemy.radius,
-      hp: Math.floor((22 + state.difficulty * 6.5) * pattern.hpScale),
+      hp,
+      maxHp: hp,
       speed:
         rand(pattern.speedMin, pattern.speedMax) +
         state.difficulty * 0.16 +
         nextWave * 0.02,
       trackStrength:
-        rand(pattern.trackMin, pattern.trackMax) +
-        Math.min(0.35, nextWave * 0.02),
+        rand(pattern.trackMin, pattern.trackMax) + Math.min(0.35, nextWave * 0.02),
       fireCooldown: rand(pattern.fireMin, pattern.fireMax),
       hitFlash: 0,
     });
