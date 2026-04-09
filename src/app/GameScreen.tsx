@@ -315,7 +315,8 @@ export function GameScreen() {
           maxShield={player.maxShield}
           ammo={player.ammo}
           maxAmmo={player.maxAmmo}
-          boost={player.boostTimer}
+          homingMissiles={player.homingMissiles}
+          speedBoostTimer={player.speedBoostTimer}
           bossName={activeBoss ? BOSS_NAMES[activeBoss.type] : undefined}
           bossHealth={activeBoss?.hp}
           bossMaxHealth={activeBoss?.maxHp}

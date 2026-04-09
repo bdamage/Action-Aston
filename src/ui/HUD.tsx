@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormationType } from '../game/types';
 import { HALF_HEIGHT } from '../game/constants';
+import pickupHomingMissileUrl from '../assets/pickup_homingmissile.png';
+import pickupSpeedUrl from '../assets/pickup_speed.png';
 
 const FORMATION_LABELS: Partial<Record<FormationType, string>> = {
   V: 'V-FORMATION',
@@ -20,7 +22,8 @@ interface HUDProps {
   maxShield: number;
   ammo: number;
   maxAmmo: number;
-  boost: number;
+  homingMissiles: number;
+  speedBoostTimer: number;
   bossName?: string;
   bossHealth?: number;
   bossMaxHealth?: number;
@@ -61,7 +64,7 @@ function Meter({
   );
 }
 
-export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, ammo, maxAmmo, boost, bossName, bossHealth, bossMaxHealth, bossWorldX, bossWorldY, lastFormation, onPause }: HUDProps) {
+export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, ammo, maxAmmo, homingMissiles, speedBoostTimer, bossName, bossHealth, bossMaxHealth, bossWorldX, bossWorldY, lastFormation, onPause }: HUDProps) {
   const showBossBar =
     typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && bossMaxHealth > 0;
   const bossRatio =
@@ -170,11 +173,19 @@ export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, 
         </div>
       )}
 
-      <div className="pointer-events-auto absolute bottom-[max(5.8rem,env(safe-area-inset-bottom))] right-3 w-[min(13rem,36vw)] rounded-xl bg-black/45 p-3 backdrop-blur">
-        <div className="text-xs uppercase tracking-wider text-slate-300">Boost</div>
-        <div className="mt-2">
-          <Meter label="Boost" value={boost} max={12} color="#ef69ff" />
-        </div>
+      <div className="pointer-events-auto absolute bottom-[max(5.8rem,env(safe-area-inset-bottom))] right-3 flex items-end gap-3 rounded-xl bg-black/45 p-3 backdrop-blur">
+        <img
+          src={pickupHomingMissileUrl}
+          alt="Homing missile pickup"
+          className="h-8 w-8 object-contain"
+          style={{ opacity: homingMissiles > 0 ? 1 : 0.35 }}
+        />
+        <img
+          src={pickupSpeedUrl}
+          alt="Speed boost pickup"
+          className="h-12 w-12 object-contain"
+          style={{ opacity: speedBoostTimer > 0 ? 1 : 0.35 }}
+        />
       </div>
     </div>
   );

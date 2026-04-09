@@ -1,6 +1,7 @@
 import menuBackgroundUrl from '../assets/menu_background.png';
 import mobileLogoUrl from '../assets/mobile_logo.png';
-import heroesUrl from '../assets/heros.png';
+import hero01small200Url from '../assets/hero01small200.png';
+import hero02small200Url from '../assets/hero02small200.png';
 import type { LeaderboardEntry } from '../app/leaderboard';
 
 interface MainMenuProps {
@@ -38,7 +39,7 @@ export function MainMenu({
       <div className="menu-hero-side menu-hero-side-left" aria-hidden="true">
         <div className="menu-hero-upper-crop">
           <img
-            src={heroesUrl}
+            src={hero01small200Url}
             alt=""
             className="menu-hero-image menu-hero-image-left"
             draggable={false}
@@ -49,7 +50,7 @@ export function MainMenu({
       <div className="menu-hero-side menu-hero-side-right" aria-hidden="true">
         <div className="menu-hero-upper-crop">
           <img
-            src={heroesUrl}
+            src={hero02small200Url}
             alt=""
             className="menu-hero-image menu-hero-image-right"
             draggable={false}
@@ -66,7 +67,7 @@ export function MainMenu({
         />
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 px-3 pb-[max(0.9rem,env(safe-area-inset-bottom))] sm:px-5">
+      <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-[max(0.9rem,env(safe-area-inset-bottom))] sm:px-5">
         <div className="mx-auto w-full max-w-3xl rounded-2xl border border-cyan-200/25 bg-black/55 p-4 shadow-glow backdrop-blur-md sm:p-6">
 
           <div className="rounded-xl border border-cyan-200/25 bg-black/35 p-3">

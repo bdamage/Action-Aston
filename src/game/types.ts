@@ -17,7 +17,14 @@ export type EnemyType =
   | "firstBoss"
   | "thirdBoss"
   | "finalBoss";
-export type PickupType = "health" | "shield" | "ammo" | "boost";
+export type PickupType =
+  | "health"
+  | "shield"
+  | "ammo"
+  | "boost"
+  | "homingMissiles"
+  | "waveClear"
+  | "speedUp";
 export type FormationType =
   | "random"
   | "V"
@@ -35,12 +42,15 @@ export interface Player {
   position: Vector2;
   radius: number;
   speed: number;
+  speedBoostTimer: number;
   health: number;
   maxHealth: number;
   shield: number;
   maxShield: number;
   ammo: number;
   maxAmmo: number;
+  homingMissiles: number;
+  homingMissileCooldown: number;
   shootCooldown: number;
   /** Base cooldown between shots (seconds). Derived from weapon upgrade level. */
   baseShootCooldown: number;
@@ -65,6 +75,7 @@ export interface Enemy {
 
 export interface Projectile {
   id: number;
+  kind: "standard" | "homing";
   from: "player" | "enemy";
   position: Vector2;
   velocity: Vector2;

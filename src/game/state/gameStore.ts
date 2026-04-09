@@ -10,7 +10,11 @@ import {
 } from "./garageStore";
 import {cloneAlignmentTuning} from "../renderTuning";
 import {clamp, intersects} from "../systems/collisionSystem";
-import {createPickup, maybeCreatePickup} from "../systems/pickupSystem";
+import {
+  createPickup,
+  maybeCreatePickup,
+  randomPickupType,
+} from "../systems/pickupSystem";
 import {
   buildEnemySpatialIndex,
   getNearbyEnemies,
@@ -26,7 +30,6 @@ import type {
   GamePhase,
   GameState,
   Pickup,
-  PickupType,
   Projectile,
   Vector2,
 } from "../types";
@@ -138,6 +141,36 @@ const FIRST_BOSS_HOVER_Y = HALF_HEIGHT - 1.55 - BOSS_HOVER_DOWN_SHIFT;
 // Third boss sits lower so the encounter feels more aggressive and readable.
 const THIRD_BOSS_HOVER_Y = HALF_HEIGHT - 3.1 - BOSS_HOVER_DOWN_SHIFT;
 const FINAL_BOSS_HOVER_Y = HALF_HEIGHT - 2.05 - BOSS_HOVER_DOWN_SHIFT;
+const SPEED_UP_MULTIPLIER = 1.35;
+const SPEED_UP_MAX_DURATION = 18;
+const HOMING_MISSILE_DAMAGE = 150;
+const HOMING_MISSILE_COOLDOWN = 0.75;
+const HOMING_MISSILE_SPEED = 12;
+const HOMING_MISSILE_LAUNCH_OFFSET = 0.34;
+const HOMING_MISSILE_LAUNCH_SIDE_SPEED = 6.8;
+const HOMING_MISSILE_TURN_RESPONSE = 2.4;
+const HOMING_MISSILE_COLLISION_BONUS = 0.32;
+
+function findNearestAliveEnemy(
+  origin: Vector2,
+  enemies: Enemy[],
+): Enemy | null {
+  let nearest: Enemy | null = null;
+  let nearestDistSq = Number.POSITIVE_INFINITY;
+
+  for (const enemy of enemies) {
+    if (enemy.hp <= 0) continue;
+    const dx = enemy.position.x - origin.x;
+    const dy = enemy.position.y - origin.y;
+    const distSq = dx * dx + dy * dy;
+    if (distSq < nearestDistSq) {
+      nearestDistSq = distSq;
+      nearest = enemy;
+    }
+  }
+
+  return nearest;
+}
 
 function isBossEnemy(enemy: Enemy) {
   return (
@@ -310,26 +343,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
       radius: state.alignment.player.radius,
       shootCooldown: Math.max(0, state.player.shootCooldown - frameDt),
       boostTimer: Math.max(0, state.player.boostTimer - frameDt),
+      speedBoostTimer: Math.max(0, state.player.speedBoostTimer - frameDt),
+      homingMissileCooldown: Math.max(
+        0,
+        state.player.homingMissileCooldown - frameDt,
+      ),
       hitFlash: Math.max(0, state.player.hitFlash - frameDt),
     };
 
+    const effectiveSpeed =
+      player.speed * (player.speedBoostTimer > 0 ? SPEED_UP_MULTIPLIER : 1);
+
     player.position.x = clamp(
-      player.position.x + state.input.movement.x * player.speed * frameDt,
+      player.position.x + state.input.movement.x * effectiveSpeed * frameDt,
       -HALF_WIDTH + player.radius,
       HALF_WIDTH - player.radius,
     );
     player.position.y = clamp(
-      player.position.y + state.input.movement.y * player.speed * frameDt,
+      player.position.y + state.input.movement.y * effectiveSpeed * frameDt,
       -HALF_HEIGHT + player.radius,
       HALF_HEIGHT - player.radius,
     );
 
     const projectiles: Projectile[] = state.projectiles.map((projectile) => ({
       ...projectile,
-      position: {
-        x: projectile.position.x + projectile.velocity.x * frameDt,
-        y: projectile.position.y + projectile.velocity.y * frameDt,
-      },
+      position: {...projectile.position},
+      velocity: {...projectile.velocity},
     }));
 
     let nextProjectileId = state.nextProjectileId;
@@ -342,6 +381,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       for (const offset of spread) {
         projectiles.push({
           id: nextProjectileId++,
+          kind: "standard",
           from: "player",
           position: {
             x: player.position.x + offset,
@@ -424,6 +464,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const inv = 1 / Math.max(0.001, Math.hypot(dx, dy));
         projectiles.push({
           id: nextProjectileId++,
+          kind: "standard",
           from: "enemy",
           position: {x: enemy.position.x, y: enemy.position.y - 0.3},
           velocity: {x: dx * inv * 6.5, y: dy * inv * 6.5},
@@ -460,13 +501,114 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let coinsCollected = state.coinsCollected;
     const enemyIndex = buildEnemySpatialIndex(enemies, 1.25);
 
+    const awardEnemyDestroyed = (enemy: Enemy) => {
+      score += 100;
+      explosions.push({
+        id: nextExplosionId++,
+        position: {...enemy.position},
+        ttl: 0.4,
+        maxTtl: 0.4,
+        scale: 1.2,
+      });
+
+      const isLastEnemy = enemies.filter((e) => e.hp > 0).length === 0;
+      if (isLastEnemy) {
+        const maybePickup = maybeCreatePickup(
+          nextPickupId++,
+          enemy.position.x,
+          enemy.position.y,
+          0.27,
+          state.alignment.pickup.radius,
+        );
+        if (maybePickup) {
+          pickups.push(maybePickup);
+        }
+      }
+
+      if (isBossEnemy(enemy)) {
+        const BOSS_COIN_COUNT = 15;
+        for (let i = 0; i < BOSS_COIN_COUNT; i++) {
+          const angle = (i / BOSS_COIN_COUNT) * Math.PI * 2;
+          const spreadR = 0.5 + Math.random() * 0.5;
+          coins.push({
+            id: nextCoinId++,
+            position: {
+              x: enemy.position.x + Math.cos(angle) * spreadR,
+              y: enemy.position.y + Math.sin(angle) * spreadR * 0.5,
+            },
+            radius: 0.28,
+            vx: Math.cos(angle) * (0.8 + Math.random() * 0.6),
+            value: 100,
+          });
+        }
+      } else {
+        coins.push({
+          id: nextCoinId++,
+          position: {x: enemy.position.x, y: enemy.position.y},
+          radius: 0.28,
+          vx: (Math.random() - 0.5) * 1.2,
+          value: 100,
+        });
+      }
+
+      soundManager.playExplosion();
+    };
+
+    if (player.homingMissiles > 0 && player.homingMissileCooldown <= 0) {
+      const target = findNearestAliveEnemy(player.position, enemies);
+      if (target) {
+        const launchSide = nextProjectileId % 2 === 0 ? -1 : 1;
+        projectiles.push({
+          id: nextProjectileId++,
+          kind: "homing",
+          from: "player",
+          position: {
+            x: player.position.x + launchSide * HOMING_MISSILE_LAUNCH_OFFSET,
+            y: player.position.y + 0.52,
+          },
+          velocity: {
+            x: launchSide * HOMING_MISSILE_LAUNCH_SIDE_SPEED,
+            y: HOMING_MISSILE_SPEED * 0.75,
+          },
+          radius:
+            state.alignment.projectile.radius + HOMING_MISSILE_COLLISION_BONUS,
+          damage: HOMING_MISSILE_DAMAGE,
+        });
+        player.homingMissiles -= 1;
+        player.homingMissileCooldown = HOMING_MISSILE_COOLDOWN;
+      }
+    }
+
+    for (const projectile of projectiles) {
+      if (projectile.from === "player" && projectile.kind === "homing") {
+        const target = findNearestAliveEnemy(projectile.position, enemies);
+        if (target) {
+          const dx = target.position.x - projectile.position.x;
+          const dy = target.position.y - projectile.position.y;
+          const inv = 1 / Math.max(0.001, Math.hypot(dx, dy));
+          const desiredVx = dx * inv * HOMING_MISSILE_SPEED;
+          const desiredVy = dy * inv * HOMING_MISSILE_SPEED;
+          const turnBlend = clamp(HOMING_MISSILE_TURN_RESPONSE * frameDt, 0, 1);
+          projectile.velocity.x +=
+            (desiredVx - projectile.velocity.x) * turnBlend;
+          projectile.velocity.y +=
+            (desiredVy - projectile.velocity.y) * turnBlend;
+        }
+      }
+
+      projectile.position.x += projectile.velocity.x * frameDt;
+      projectile.position.y += projectile.velocity.y * frameDt;
+    }
+
     for (const projectile of projectiles) {
       if (projectile.from !== "player") continue;
+      const hitRadiusBoost =
+        projectile.kind === "homing" ? HOMING_MISSILE_COLLISION_BONUS : 0;
       const nearbyEnemies = getNearbyEnemies(
         enemyIndex,
         projectile.position.x,
         projectile.position.y,
-        projectile.radius + 0.9,
+        projectile.radius + 0.9 + hitRadiusBoost,
       );
 
       for (const enemy of nearbyEnemies) {
@@ -474,7 +616,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (
           !intersects(
             projectile.position,
-            projectile.radius,
+            projectile.radius + hitRadiusBoost,
             enemy.position,
             enemy.radius,
           )
@@ -486,56 +628,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         projectile.damage = 0;
 
         if (enemy.hp <= 0) {
-          score += 100;
-          explosions.push({
-            id: nextExplosionId++,
-            position: {...enemy.position},
-            ttl: 0.4,
-            maxTtl: 0.4,
-            scale: 1.2,
-          });
-
-          const isLastEnemy = enemies.filter((e) => e.hp > 0).length === 0;
-          if (isLastEnemy) {
-            const maybePickup = maybeCreatePickup(
-              nextPickupId++,
-              enemy.position.x,
-              enemy.position.y,
-              0.27,
-              state.alignment.pickup.radius,
-            );
-            if (maybePickup) {
-              pickups.push(maybePickup);
-            }
-          }
-
-          if (isBossEnemy(enemy)) {
-            const BOSS_COIN_COUNT = 15;
-            for (let i = 0; i < BOSS_COIN_COUNT; i++) {
-              const angle = (i / BOSS_COIN_COUNT) * Math.PI * 2;
-              const spreadR = 0.5 + Math.random() * 0.5;
-              coins.push({
-                id: nextCoinId++,
-                position: {
-                  x: enemy.position.x + Math.cos(angle) * spreadR,
-                  y: enemy.position.y + Math.sin(angle) * spreadR * 0.5,
-                },
-                radius: 0.28,
-                vx: Math.cos(angle) * (0.8 + Math.random() * 0.6),
-                value: 100,
-              });
-            }
-          } else {
-            coins.push({
-              id: nextCoinId++,
-              position: {x: enemy.position.x, y: enemy.position.y},
-              radius: 0.28,
-              vx: (Math.random() - 0.5) * 1.2,
-              value: 100,
-            });
-          }
-
-          soundManager.playExplosion();
+          awardEnemyDestroyed(enemy);
         }
 
         if (projectile.damage <= 0) {
@@ -640,6 +733,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (pickup.type === "boost") {
         player.boostTimer = Math.min(12, player.boostTimer + 5.5);
       }
+      if (pickup.type === "homingMissiles") {
+        player.homingMissiles += 3;
+      }
+      if (pickup.type === "speedUp") {
+        player.speedBoostTimer = Math.min(
+          SPEED_UP_MAX_DURATION,
+          player.speedBoostTimer + value,
+        );
+      }
+      if (pickup.type === "waveClear") {
+        for (const enemy of enemies) {
+          if (enemy.hp <= 0) continue;
+          enemy.hp = 0;
+          enemy.hitFlash = HIT_FLASH_DURATION;
+          awardEnemyDestroyed(enemy);
+        }
+      }
       soundManager.playPickup();
     }
 
@@ -658,9 +768,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let pickupDropTimer = state.pickupDropTimer - frameDt;
     if (pickupDropTimer <= 0) {
       const x = (Math.random() - 0.5) * (HALF_WIDTH * 1.6);
-      const timedRoll = Math.random();
-      const timedType: PickupType =
-        timedRoll < 0.22 ? "ammo" : timedRoll < 0.42 ? "boost" : "health";
+      const timedType = randomPickupType();
       pickups.push(
         createPickup(
           nextPickupId++,
@@ -677,9 +785,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const waveJustCleared =
       state.enemies.length > 0 && aliveEnemies.length === 0;
     if (waveJustCleared) {
-      const clearRoll = Math.random();
-      const clearType: PickupType =
-        clearRoll < 0.32 ? "ammo" : clearRoll < 0.55 ? "boost" : "health";
+      const clearType = randomPickupType();
       pickups.push(
         createPickup(
           nextPickupId++,

@@ -8,11 +8,14 @@ import firstBossUrl from '../../assets/first_boss.png';
 import finalBossUrl from '../../assets/final_boss.png';
 import thirdBossUrl from '../../assets/boss03.png';
 import coinUrl from '../../assets/coin.png';
+import pickupBombUrl from '../../assets/pickup_bomb.png';
+import pickupHomingMissileUrl from '../../assets/pickup_homingmissile.png';
+import pickupSpeedUrl from '../../assets/pickup_speed.png';
 import { getDpiSpriteScaleMultiplier, SPRITE_SCALE } from '../renderTuning';
 import { useGarageStore, SKIN_OPTIONS } from '../state/garageStore';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameStore } from '../state/gameStore';
-import type { EnemyType } from '../types';
+import type { EnemyType, PickupType } from '../types';
 
 function explosionFrame(remainingTtl: number, maxTtl: number) {
   const progress = 1 - remainingTtl / Math.max(0.001, maxTtl);
@@ -52,6 +55,7 @@ function hitFlashOpacity(hitFlash: number): number {
 }
 
 const DRAGON_BOSS_SIZE_MULTIPLIER = 2.5;
+const SPECIAL_PICKUP_SIZE_MULTIPLIER = 2.5;
 
 function BoundsOverlay({
   position,
@@ -87,11 +91,22 @@ export function RenderScene() {
   );
 
   const baseTexture = useLoader(THREE.TextureLoader, atlas.url);
-  const [firstBossTexture, finalBossTexture, thirdBossTexture, coinTexture] = useLoader(THREE.TextureLoader, [
+  const [
+    firstBossTexture,
+    finalBossTexture,
+    thirdBossTexture,
+    coinTexture,
+    pickupHomingMissileTexture,
+    pickupBombTexture,
+    pickupSpeedTexture
+  ] = useLoader(THREE.TextureLoader, [
     firstBossUrl,
     finalBossUrl,
     thirdBossUrl,
     coinUrl,
+    pickupHomingMissileUrl,
+    pickupBombUrl,
+    pickupSpeedUrl,
   ]);
 
   const bossTextures = useMemo(() => {
@@ -121,6 +136,25 @@ export function RenderScene() {
     coinTexture.needsUpdate = true;
     return coinTexture;
   }, [coinTexture]);
+
+  const specialPickupTextures = useMemo(() => {
+    const output = {
+      homingMissiles: pickupHomingMissileTexture,
+      waveClear: pickupBombTexture,
+      speedUp: pickupSpeedTexture,
+    };
+
+    for (const texture of Object.values(output)) {
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.magFilter = THREE.LinearFilter;
+      texture.minFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      texture.needsUpdate = true;
+    }
+
+    return output;
+  }, [pickupHomingMissileTexture, pickupBombTexture, pickupSpeedTexture]);
 
   const textures = useMemo(() => {
     const output = {} as Record<SpriteKey, THREE.Texture>;
@@ -168,6 +202,52 @@ export function RenderScene() {
 
   const getEnemyRotation = (enemyType: EnemyType) =>
     enemyType === 'thirdBoss' ? 0 : Math.PI;
+
+  const getPickupTexture = (pickupType: PickupType): THREE.Texture => {
+    if (pickupType === 'homingMissiles') return specialPickupTextures.homingMissiles;
+    if (pickupType === 'waveClear') return specialPickupTextures.waveClear;
+    if (pickupType === 'speedUp') return specialPickupTextures.speedUp;
+    if (pickupType === 'health') return textures.pickupHealth;
+    if (pickupType === 'shield') return textures.pickupShield;
+    if (pickupType === 'ammo') return textures.pickupAmmo;
+    return textures.pickupBoost;
+  };
+
+  const getPickupSize = (pickupType: PickupType): [number, number] => {
+    if (pickupType === 'homingMissiles') {
+      return scaledSizeFromTexture(
+        specialPickupTextures.homingMissiles,
+        alignment.pickup.h * SPECIAL_PICKUP_SIZE_MULTIPLIER,
+        spriteScaleMultiplier
+      );
+    }
+    if (pickupType === 'waveClear') {
+      return scaledSizeFromTexture(
+        specialPickupTextures.waveClear,
+        alignment.pickup.h * SPECIAL_PICKUP_SIZE_MULTIPLIER,
+        spriteScaleMultiplier
+      );
+    }
+    if (pickupType === 'speedUp') {
+      return scaledSizeFromTexture(
+        specialPickupTextures.speedUp,
+        alignment.pickup.h * SPECIAL_PICKUP_SIZE_MULTIPLIER,
+        spriteScaleMultiplier
+      );
+    }
+
+    return scaledSizeFromFrame(
+      pickupType === 'health'
+        ? 'pickupHealth'
+        : pickupType === 'shield'
+          ? 'pickupShield'
+          : pickupType === 'ammo'
+            ? 'pickupAmmo'
+            : 'pickupBoost',
+      alignment.pickup.h,
+      spriteScaleMultiplier
+    );
+  };
 
   const isTouch = useMemo(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0, []);
   const maxExplosions = isTouch ? 28 : 60;
@@ -294,89 +374,97 @@ export function RenderScene() {
 
       {!inAlignmentMode && projectiles.map((projectile) => (
         <group key={projectile.id}>
-          <AtlasPlane
-            texture={projectile.from === 'player' ? textures.laserBlue : textures.laserRed}
-            position={[projectile.position.x, projectile.position.y, 0]}
-            size={scaledSizeFromFrame(
-              projectile.from === 'player' ? 'laserBlue' : 'laserRed',
-              alignment.projectile.h,
-              spriteScaleMultiplier
-            )}
-            tint={projectile.from === 'player' ? '#8ff8ff' : '#ff8d8d'}
-            rotationZ={Math.PI / 2}
-          />
-          <mesh
-            position={[
-              projectile.position.x - projectile.velocity.x * 0.035,
-              projectile.position.y - projectile.velocity.y * 0.035,
-              -0.01,
-            ]}
-            rotation={[0, 0, Math.atan2(projectile.velocity.y, projectile.velocity.x) - Math.PI / 2]}
-          >
-            <planeGeometry args={[
-              alignment.projectile.h * 0.24 * SPRITE_SCALE * spriteScaleMultiplier,
-              alignment.projectile.h * 1.85 * SPRITE_SCALE * spriteScaleMultiplier,
-            ]} />
-            <meshBasicMaterial
-              color={projectile.from === 'player' ? '#7befff' : '#ff9e9e'}
-              transparent
-              opacity={0.46}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-            />
-          </mesh>
-          <mesh position={[projectile.position.x, projectile.position.y, -0.008]}>
-            <circleGeometry args={[
-              alignment.projectile.h * 0.17 * SPRITE_SCALE * spriteScaleMultiplier,
-              20,
-            ]} />
-            <meshBasicMaterial
-              color={projectile.from === 'player' ? '#b8fdff' : '#ffc0c0'}
-              transparent
-              opacity={0.58}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-            />
-          </mesh>
+          {(() => {
+            const isHomingMissile = projectile.from === 'player' && projectile.kind === 'homing';
+            const projectileTexture = isHomingMissile
+              ? specialPickupTextures.homingMissiles
+              : projectile.from === 'player'
+                ? textures.laserBlue
+                : textures.laserRed;
+            const projectileSize = isHomingMissile
+              ? scaledSizeFromTexture(
+                  specialPickupTextures.homingMissiles,
+                  alignment.projectile.h * 1.7,
+                  spriteScaleMultiplier
+                )
+              : scaledSizeFromFrame(
+                  projectile.from === 'player' ? 'laserBlue' : 'laserRed',
+                  alignment.projectile.h,
+                  spriteScaleMultiplier
+                );
+            const projectileRotation = isHomingMissile
+              ? Math.atan2(projectile.velocity.y, projectile.velocity.x) - Math.PI / 2
+              : Math.PI / 2;
+            const projectileTint = isHomingMissile
+              ? '#ffffff'
+              : projectile.from === 'player'
+                ? '#8ff8ff'
+                : '#ff8d8d';
+            const trailColor = isHomingMissile
+              ? '#ffd94d'
+              : projectile.from === 'player'
+                ? '#7befff'
+                : '#ff9e9e';
+
+            return (
+              <>
+                <AtlasPlane
+                  texture={projectileTexture}
+                  position={[projectile.position.x, projectile.position.y, 0]}
+                  size={projectileSize}
+                  tint={projectileTint}
+                  rotationZ={projectileRotation}
+                />
+                <mesh
+                  position={[
+                    projectile.position.x - projectile.velocity.x * 0.035,
+                    projectile.position.y - projectile.velocity.y * 0.035,
+                    -0.01,
+                  ]}
+                  rotation={[0, 0, Math.atan2(projectile.velocity.y, projectile.velocity.x) - Math.PI / 2]}
+                >
+                  <planeGeometry args={[
+                    alignment.projectile.h * 0.24 * SPRITE_SCALE * spriteScaleMultiplier,
+                    alignment.projectile.h * 1.85 * SPRITE_SCALE * spriteScaleMultiplier,
+                  ]} />
+                  <meshBasicMaterial
+                    color={trailColor}
+                    transparent
+                    opacity={isHomingMissile ? 0.62 : 0.46}
+                    blending={THREE.AdditiveBlending}
+                    depthWrite={false}
+                  />
+                </mesh>
+                <mesh position={[projectile.position.x, projectile.position.y, -0.008]}>
+                  <circleGeometry args={[
+                    alignment.projectile.h * 0.17 * SPRITE_SCALE * spriteScaleMultiplier,
+                    20,
+                  ]} />
+                  <meshBasicMaterial
+                    color={isHomingMissile ? '#ffe08a' : projectile.from === 'player' ? '#b8fdff' : '#ffc0c0'}
+                    transparent
+                    opacity={isHomingMissile ? 0.75 : 0.58}
+                    blending={THREE.AdditiveBlending}
+                    depthWrite={false}
+                  />
+                </mesh>
+              </>
+            );
+          })()}
         </group>
       ))}
 
       {!inAlignmentMode && pickups.map((pickup) => (
         <AtlasPlane
           key={pickup.id}
-          texture={
-            pickup.type === 'health'
-              ? textures.pickupHealth
-              : pickup.type === 'shield'
-                ? textures.pickupShield
-                : pickup.type === 'ammo'
-                  ? textures.pickupAmmo
-                  : textures.pickupBoost
-          }
+          texture={getPickupTexture(pickup.type)}
           position={[pickup.position.x, pickup.position.y, 0]}
-          size={scaledSizeFromFrame(
-            pickup.type === 'health'
-              ? 'pickupHealth'
-              : pickup.type === 'shield'
-                ? 'pickupShield'
-                : pickup.type === 'ammo'
-                  ? 'pickupAmmo'
-                  : 'pickupBoost',
-            alignment.pickup.h,
-            spriteScaleMultiplier
-          )}
+          size={getPickupSize(pickup.type)}
         />
       ))}
 
       {!inAlignmentMode && showHitboxes && pickups.map((pickup) => {
-        const pickupSize = scaledSizeFromFrame(
-          pickup.type === 'health' ? 'pickupHealth'
-            : pickup.type === 'shield' ? 'pickupShield'
-            : pickup.type === 'ammo' ? 'pickupAmmo'
-            : 'pickupBoost',
-          alignment.pickup.h,
-          spriteScaleMultiplier
-        );
+        const pickupSize = getPickupSize(pickup.type);
         return (
           <BoundsOverlay
             key={`hb-pickup-${pickup.id}`}
