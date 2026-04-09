@@ -11,9 +11,10 @@ import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameStore } from '../state/gameStore';
 import type { EnemyType } from '../types';
 
-function explosionFrame(index: number) {
-  if (index % 3 === 0) return 'explosion01' as const;
-  if (index % 3 === 1) return 'explosion02' as const;
+function explosionFrame(remainingTtl: number, maxTtl: number) {
+  const progress = 1 - remainingTtl / Math.max(0.001, maxTtl);
+  if (progress < 0.34) return 'explosion01' as const;
+  if (progress < 0.67) return 'explosion02' as const;
   return 'explosion03' as const;
 }
 
@@ -233,18 +234,52 @@ export function RenderScene() {
       ))}
 
       {!inAlignmentMode && projectiles.map((projectile) => (
-        <AtlasPlane
-          key={projectile.id}
-          texture={projectile.from === 'player' ? textures.laserBlue : textures.laserRed}
-          position={[projectile.position.x, projectile.position.y, 0]}
-          size={scaledSizeFromFrame(
-            projectile.from === 'player' ? 'laserBlue' : 'laserRed',
-            alignment.projectile.h,
-            spriteScaleMultiplier
-          )}
-          tint={projectile.from === 'player' ? '#8ff8ff' : '#ff8d8d'}
-          rotationZ={Math.PI / 2}
-        />
+        <group key={projectile.id}>
+          <AtlasPlane
+            texture={projectile.from === 'player' ? textures.laserBlue : textures.laserRed}
+            position={[projectile.position.x, projectile.position.y, 0]}
+            size={scaledSizeFromFrame(
+              projectile.from === 'player' ? 'laserBlue' : 'laserRed',
+              alignment.projectile.h,
+              spriteScaleMultiplier
+            )}
+            tint={projectile.from === 'player' ? '#8ff8ff' : '#ff8d8d'}
+            rotationZ={Math.PI / 2}
+          />
+          <mesh
+            position={[
+              projectile.position.x - projectile.velocity.x * 0.035,
+              projectile.position.y - projectile.velocity.y * 0.035,
+              -0.01,
+            ]}
+            rotation={[0, 0, Math.atan2(projectile.velocity.y, projectile.velocity.x) - Math.PI / 2]}
+          >
+            <planeGeometry args={[
+              alignment.projectile.h * 0.24 * SPRITE_SCALE * spriteScaleMultiplier,
+              alignment.projectile.h * 1.85 * SPRITE_SCALE * spriteScaleMultiplier,
+            ]} />
+            <meshBasicMaterial
+              color={projectile.from === 'player' ? '#7befff' : '#ff9e9e'}
+              transparent
+              opacity={0.46}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh position={[projectile.position.x, projectile.position.y, -0.008]}>
+            <circleGeometry args={[
+              alignment.projectile.h * 0.17 * SPRITE_SCALE * spriteScaleMultiplier,
+              20,
+            ]} />
+            <meshBasicMaterial
+              color={projectile.from === 'player' ? '#b8fdff' : '#ffc0c0'}
+              transparent
+              opacity={0.58}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
       ))}
 
       {!inAlignmentMode && pickups.map((pickup) => (
@@ -274,14 +309,34 @@ export function RenderScene() {
         />
       ))}
 
-      {!inAlignmentMode && explosions.slice(-maxExplosions).map((explosion, index) => (
-        <AtlasPlane
-          key={explosion.id}
-          texture={textures[explosionFrame(index)]}
-          position={[explosion.position.x, explosion.position.y, 0]}
-          size={scaledSizeFromFrame(explosionFrame(index), explosion.scale, spriteScaleMultiplier)}
-          opacity={explosion.ttl / explosion.maxTtl}
-        />
+      {!inAlignmentMode && explosions.slice(-maxExplosions).map((explosion) => (
+        <group key={explosion.id}>
+          <AtlasPlane
+            texture={textures[explosionFrame(explosion.ttl, explosion.maxTtl)]}
+            position={[explosion.position.x, explosion.position.y, 0]}
+            size={scaledSizeFromFrame(
+              explosionFrame(explosion.ttl, explosion.maxTtl),
+              explosion.scale * (1 + (1 - explosion.ttl / explosion.maxTtl) * 0.42),
+              spriteScaleMultiplier
+            )}
+            opacity={Math.pow(explosion.ttl / explosion.maxTtl, 0.85)}
+          />
+          <mesh position={[explosion.position.x, explosion.position.y, -0.012]}>
+            <circleGeometry
+              args={[
+                explosion.scale * (0.5 + (1 - explosion.ttl / explosion.maxTtl) * 1.35) * SPRITE_SCALE * spriteScaleMultiplier,
+                24,
+              ]}
+            />
+            <meshBasicMaterial
+              color="#ffd891"
+              transparent
+              opacity={Math.pow(explosion.ttl / explosion.maxTtl, 1.2) * 0.5}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
       ))}
     </>
   );

@@ -39,8 +39,10 @@ function Meter({
 }
 
 export function HUD({ score, wave, health, shield, ammo, boost, bossName, bossHealth, bossMaxHealth, onPause }: HUDProps) {
+  const showBossBar =
+    typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && bossMaxHealth > 0;
   const bossRatio =
-    typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && bossMaxHealth > 0
+    showBossBar
       ? Math.max(0, Math.min(1, bossHealth / bossMaxHealth))
       : 0;
 
@@ -67,8 +69,8 @@ export function HUD({ score, wave, health, shield, ammo, boost, bossName, bossHe
         <Meter label="Ammo" value={ammo} max={220} color="#fdd065" compact />
       </div>
 
-      {typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && (
-        <div className="pointer-events-none absolute left-1/2 top-[max(0.75rem,env(safe-area-inset-top))] w-[min(16rem,52vw)] -translate-x-1/2 rounded-lg border border-rose-300/35 bg-black/55 px-3 py-2 backdrop-blur">
+      {showBossBar && (
+        <div className="pointer-events-none absolute left-1/2 top-[max(4.25rem,calc(env(safe-area-inset-top)+3.75rem))] z-30 w-[min(20rem,72vw)] -translate-x-1/2 rounded-lg border border-rose-300/55 bg-black/65 px-3 py-2 shadow-[0_10px_24px_rgba(255,90,120,0.18)] backdrop-blur">
           <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-rose-100">
             <span>{bossName ?? 'Boss'}</span>
             <span>
