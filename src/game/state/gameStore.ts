@@ -658,7 +658,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let pickupDropTimer = state.pickupDropTimer - frameDt;
     if (pickupDropTimer <= 0) {
       const x = (Math.random() - 0.5) * (HALF_WIDTH * 1.6);
-      const timedType: PickupType = Math.random() < 0.35 ? "ammo" : "health";
+      const timedRoll = Math.random();
+      const timedType: PickupType =
+        timedRoll < 0.22 ? "ammo" : timedRoll < 0.42 ? "boost" : "health";
       pickups.push(
         createPickup(
           nextPickupId++,
@@ -675,7 +677,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const waveJustCleared =
       state.enemies.length > 0 && aliveEnemies.length === 0;
     if (waveJustCleared) {
-      const clearType: PickupType = Math.random() < 0.4 ? "ammo" : "health";
+      const clearRoll = Math.random();
+      const clearType: PickupType =
+        clearRoll < 0.32 ? "ammo" : clearRoll < 0.55 ? "boost" : "health";
       pickups.push(
         createPickup(
           nextPickupId++,

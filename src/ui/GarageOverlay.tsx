@@ -88,11 +88,11 @@ function UpgradeCard({ label, icon, currentLevel, tiers, onUpgrade, coins }: Upg
   );
 }
 
-function skinPreviewStyle(frameIndex: number) {
-  const column = frameIndex % SKIN_ATLAS.columns;
-  const row = Math.floor(frameIndex / SKIN_ATLAS.columns);
-  const x = column * SKIN_ATLAS.frameWidth + SKIN_ATLAS.frameOffsetX;
-  const y = row * SKIN_ATLAS.frameHeight + SKIN_ATLAS.frameOffsetY;
+function skinPreviewStyle(skinIndex: number) {
+  const column = skinIndex % SKIN_ATLAS.columns;
+  const row = Math.floor(skinIndex / SKIN_ATLAS.columns);
+  const x = column * SKIN_ATLAS.frameWidth;
+  const y = row * SKIN_ATLAS.frameHeight + SKIN_ATLAS.offsetYFrame;
   const previewSize = 64;
   const scale = previewSize / SKIN_ATLAS.frameWidth;
 
@@ -258,7 +258,7 @@ export function GarageOverlay({ onClose }: GarageOverlayProps) {
                   >
                     <div
                       className="mx-auto mb-2 h-16 w-16 rounded-lg border border-white/20 shadow-lg"
-                      style={skinPreviewStyle(skin.frameIndex)}
+                      style={skinPreviewStyle(i)}
                     />
                     <p className="text-center text-xs font-bold text-slate-100">{skin.name}</p>
                     <p className="text-center text-[10px] text-slate-400">{skin.description}</p>

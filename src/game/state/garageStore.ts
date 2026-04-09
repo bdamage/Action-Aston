@@ -85,6 +85,16 @@ export interface SkinOption {
   cost: number;
 }
 
+export const SKIN_ATLAS = {
+  columns: 4,
+  rows: 5,
+  frameWidth: 256,
+  frameHeight: 256,
+  imageWidth: 1024,
+  imageHeight: 1536,
+  offsetYFrame: 70,
+} as const;
+
 export const SKIN_OPTIONS: SkinOption[] = [
   {
     name: "Classic",
@@ -95,110 +105,115 @@ export const SKIN_OPTIONS: SkinOption[] = [
   {
     name: "Inferno",
     description: "Molten-red strike craft",
-    color: "#ff604a",
+    color: "#cf553e",
     cost: 300,
   },
   {
     name: "Verdant",
     description: "Emerald interceptor",
-    color: "#6bff8f",
+    color: "#5fcf74",
     cost: 650,
   },
   {
     name: "Nebula",
     description: "Violet deep-space shell",
-    color: "#c27cff",
+    color: "#a76ed8",
     cost: 1000,
   },
   {
     name: "Sunflare",
     description: "Amber front armor",
-    color: "#ffba63",
+    color: "#d9a764",
     cost: 1400,
   },
   {
     name: "Midnight",
     description: "Darkened cobalt hull",
-    color: "#4d8eff",
+    color: "#668fca",
     cost: 1900,
   },
   {
     name: "Radiant",
     description: "Bright yellow cockpit",
-    color: "#ffe470",
+    color: "#e2cd75",
     cost: 2500,
   },
   {
     name: "Aurora",
     description: "Pink-white polished finish",
-    color: "#ff9ff2",
+    color: "#cfa3d8",
     cost: 3200,
   },
-  {name: "Frostline", description: "Icy cyan frame", color: "#79e9ff", cost: 4000},
+  {
+    name: "Frostline",
+    description: "Icy cyan frame",
+    color: "#91d7e8",
+    cost: 4000,
+  },
   {
     name: "Bloodline",
     description: "Crimson hunter variant",
-    color: "#ff4a63",
+    color: "#c25762",
     cost: 4900,
   },
   {
     name: "Daystar",
     description: "Gold-white command shell",
-    color: "#ffd95e",
+    color: "#d5c27e",
     cost: 6000,
   },
   {
     name: "Glacier",
     description: "Clean blue-white plating",
-    color: "#9cd7ff",
+    color: "#b8c9d8",
     cost: 7300,
   },
   {
     name: "Jade Fang",
     description: "Forest-green assault skin",
-    color: "#46dd71",
+    color: "#57ac65",
     cost: 8700,
   },
   {
     name: "Rosecore",
     description: "Magenta core fusion",
-    color: "#ff75cf",
+    color: "#c686a5",
     cost: 10300,
   },
   {
     name: "Skyrift",
     description: "Bright azure wingline",
-    color: "#6bc0ff",
+    color: "#89b6ce",
     cost: 12100,
   },
   {
     name: "Royal Ember",
     description: "Purple-gold high rank",
-    color: "#d58cff",
+    color: "#a98ca9",
     cost: 14100,
   },
   {
     name: "Bloom",
     description: "High-gloss pink chassis",
-    color: "#ff8cde",
+    color: "#cb9ab7",
     cost: 16300,
   },
   {
     name: "Solaris",
     description: "Golden-black war paint",
-    color: "#ffcf58",
+    color: "#caa162",
     cost: 18700,
   },
   {
     name: "Aether",
     description: "Blue-gold refined profile",
-    color: "#86b7ff",
+    color: "#92b4c8",
     cost: 21300,
   },
   {
     name: "Arctic",
     description: "White sapphire premium",
-    color: "#9ee8ff",
+    color: "#bfd3de",
     cost: 24100,
   },
 ];
@@ -408,7 +423,9 @@ export const useGarageStore = create<GarageStore>((set, get) => {
 
 /** Shoot cooldown in seconds for a given weapon level (normal / while boosting). */
 export function weaponShootCooldown(level: number): number {
-  const values = [0.18, 0.17, 0.161, 0.152, 0.144, 0.136, 0.129, 0.122, 0.115, 0.109, 0.103];
+  const values = [
+    0.18, 0.17, 0.161, 0.152, 0.144, 0.136, 0.129, 0.122, 0.115, 0.109, 0.103,
+  ];
   return values[Math.min(level, values.length - 1)];
 }
 
