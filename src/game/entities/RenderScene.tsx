@@ -9,7 +9,8 @@ import finalBossUrl from '../../assets/final_boss.png';
 import thirdBossUrl from '../../assets/boss03.png';
 import coinUrl from '../../assets/coin.png';
 import { getDpiSpriteScaleMultiplier, SPRITE_SCALE } from '../renderTuning';
-import { useGarageStore, SKIN_OPTIONS } from '../state/garageStore';
+import skinsUrl from '../../assets/skins.png';
+import { useGarageStore, SKIN_ATLAS, SKIN_OPTIONS } from '../state/garageStore';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameStore } from '../state/gameStore';
 import type { EnemyType } from '../types';
@@ -87,7 +88,13 @@ export function RenderScene() {
   );
 
   const baseTexture = useLoader(THREE.TextureLoader, atlas.url);
-  const [firstBossTexture, finalBossTexture, thirdBossTexture, coinTexture] = useLoader(THREE.TextureLoader, [firstBossUrl, finalBossUrl, thirdBossUrl, coinUrl]);
+  const [firstBossTexture, finalBossTexture, thirdBossTexture, coinTexture, skinsTexture] = useLoader(THREE.TextureLoader, [
+    firstBossUrl,
+    finalBossUrl,
+    thirdBossUrl,
+    coinUrl,
+    skinsUrl,
+  ]);
 
   const bossTextures = useMemo(() => {
     const output = {
@@ -105,7 +112,7 @@ export function RenderScene() {
     }
 
     return output;
-  }, [firstBossTexture, finalBossTexture]);
+  }, [firstBossTexture, finalBossTexture, thirdBossTexture]);
 
   const preparedCoinTexture = useMemo(() => {
     coinTexture.wrapS = THREE.ClampToEdgeWrapping;
@@ -116,6 +123,43 @@ export function RenderScene() {
     coinTexture.needsUpdate = true;
     return coinTexture;
   }, [coinTexture]);
+
+  const skinTextures = useMemo(() => {
+    const output = [] as THREE.Texture[];
+
+    skinsTexture.wrapS = THREE.ClampToEdgeWrapping;
+    skinsTexture.wrapT = THREE.ClampToEdgeWrapping;
+    skinsTexture.magFilter = THREE.LinearFilter;
+    skinsTexture.minFilter = THREE.LinearFilter;
+    skinsTexture.generateMipmaps = false;
+
+    for (let i = 0; i < SKIN_OPTIONS.length; i++) {
+      const frameIndex = SKIN_OPTIONS[i].frameIndex;
+      const column = frameIndex % SKIN_ATLAS.columns;
+      const row = Math.floor(frameIndex / SKIN_ATLAS.columns);
+      const x = column * SKIN_ATLAS.frameWidth + SKIN_ATLAS.frameOffsetX;
+      const y = row * SKIN_ATLAS.frameHeight + SKIN_ATLAS.frameOffsetY;
+
+      const tex = skinsTexture.clone();
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      tex.magFilter = THREE.LinearFilter;
+      tex.minFilter = THREE.LinearFilter;
+      tex.generateMipmaps = false;
+      tex.repeat.set(
+        SKIN_ATLAS.frameWidth / SKIN_ATLAS.imageWidth,
+        SKIN_ATLAS.frameHeight / SKIN_ATLAS.imageHeight
+      );
+      tex.offset.set(
+        x / SKIN_ATLAS.imageWidth,
+        1 - (y + SKIN_ATLAS.frameHeight) / SKIN_ATLAS.imageHeight
+      );
+      tex.needsUpdate = true;
+      output[i] = tex;
+    }
+
+    return output;
+  }, [skinsTexture]);
 
   const textures = useMemo(() => {
     const output = {} as Record<SpriteKey, THREE.Texture>;
@@ -169,7 +213,7 @@ export function RenderScene() {
   const starDensity = isTouch ? 70 : 120;
 
   const activeSkinIndex = useGarageStore((state) => state.activeSkinIndex);
-  const skinTint = SKIN_OPTIONS[activeSkinIndex]?.color ?? '#ffffff';
+  const playerTexture = skinTextures[activeSkinIndex] ?? skinTextures[0] ?? textures.player;
 
   const player = useGameStore((state) => state.player);
   const phase = useGameStore((state) => state.phase);
@@ -195,10 +239,9 @@ export function RenderScene() {
       <Starfield density={starDensity} />
 
       <AtlasPlane
-        texture={textures.player}
+        texture={playerTexture}
         position={inAlignmentMode ? [0, 0, 0] : [player.position.x, player.position.y, 0]}
         size={playerSize}
-        tint={skinTint}
         flashOpacity={!inAlignmentMode ? hitFlashOpacity(player.hitFlash) : 0}
         rotationZ={Math.PI}
       />

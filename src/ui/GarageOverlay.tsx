@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import garageUrl from '../assets/garage.png';
+import skinsUrl from '../assets/skins.png';
 import {
   useGarageStore,
   WEAPON_TIERS,
@@ -7,6 +8,7 @@ import {
   HEALTH_TIERS,
   AMMO_TIERS,
   BOOST_TIERS,
+  SKIN_ATLAS,
   SKIN_OPTIONS,
 } from '../game/state/garageStore';
 import { useGameStore } from '../game/state/gameStore';
@@ -84,6 +86,22 @@ function UpgradeCard({ label, icon, currentLevel, tiers, onUpgrade, coins }: Upg
       )}
     </div>
   );
+}
+
+function skinPreviewStyle(frameIndex: number) {
+  const column = frameIndex % SKIN_ATLAS.columns;
+  const row = Math.floor(frameIndex / SKIN_ATLAS.columns);
+  const x = column * SKIN_ATLAS.frameWidth + SKIN_ATLAS.frameOffsetX;
+  const y = row * SKIN_ATLAS.frameHeight + SKIN_ATLAS.frameOffsetY;
+  const previewSize = 64;
+  const scale = previewSize / SKIN_ATLAS.frameWidth;
+
+  return {
+    backgroundImage: `url(${skinsUrl})`,
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: `${SKIN_ATLAS.imageWidth * scale}px ${SKIN_ATLAS.imageHeight * scale}px`,
+    backgroundPosition: `${-x * scale}px ${-y * scale}px`,
+  } as const;
 }
 
 // ─── Main overlay ────────────────────────────────────────────────────────────
@@ -225,7 +243,7 @@ export function GarageOverlay({ onClose }: GarageOverlayProps) {
           )}
 
           {tab === 'skins' && (
-            <div className="grid grid-cols-2 gap-3 pb-2">
+            <div className="grid grid-cols-2 gap-3 pb-2 sm:grid-cols-3 lg:grid-cols-4">
               {SKIN_OPTIONS.map((skin, i) => {
                 const owned     = purchasedSkins.includes(i);
                 const isActive  = activeSkinIndex === i;
@@ -239,8 +257,8 @@ export function GarageOverlay({ onClose }: GarageOverlayProps) {
                     }`}
                   >
                     <div
-                      className="mx-auto mb-2 h-10 w-10 rounded-full border-2 border-white/20 shadow-lg"
-                      style={{ backgroundColor: skin.color }}
+                      className="mx-auto mb-2 h-16 w-16 rounded-lg border border-white/20 shadow-lg"
+                      style={skinPreviewStyle(skin.frameIndex)}
                     />
                     <p className="text-center text-xs font-bold text-slate-100">{skin.name}</p>
                     <p className="text-center text-[10px] text-slate-400">{skin.description}</p>

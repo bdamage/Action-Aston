@@ -119,6 +119,18 @@ function bossWaveForSlot(slot: number) {
 
 const SIMULATION_SPEED = 0.7;
 const HIT_FLASH_DURATION = 0.16;
+const SCREEN_SHAKE = {
+  collision: {
+    shield: 0.14,
+    health: 0.24,
+  },
+  projectile: {
+    min: 0.08,
+    max: 0.2,
+    damageScale: 0.004,
+    healthBonus: 0.05,
+  },
+} as const;
 const BOSS_HOVER_DOWN_SHIFT = HALF_HEIGHT * 0.2;
 const FIRST_BOSS_HOVER_Y = HALF_HEIGHT - 1.55 - BOSS_HOVER_DOWN_SHIFT;
 // Third boss sits lower so the encounter feels more aggressive and readable.
@@ -540,7 +552,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         continue;
       enemy.hp = 0;
       player.hitFlash = HIT_FLASH_DURATION;
-      screenShake = HIT_FLASH_DURATION;
+      screenShake = Math.max(
+        screenShake,
+        player.shield > 0
+          ? SCREEN_SHAKE.collision.shield
+          : SCREEN_SHAKE.collision.health,
+      );
       if (player.shield > 0) {
         player.shield = Math.max(0, player.shield - 22);
       } else {
@@ -569,7 +586,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const hitDamage = projectile.damage;
       projectile.damage = 0;
       player.hitFlash = HIT_FLASH_DURATION;
-      screenShake = HIT_FLASH_DURATION;
+      const shieldAbsorbed = player.shield > 0;
+      const projectileShake = clamp(
+        SCREEN_SHAKE.projectile.min +
+          hitDamage * SCREEN_SHAKE.projectile.damageScale +
+          (shieldAbsorbed ? 0 : SCREEN_SHAKE.projectile.healthBonus),
+        SCREEN_SHAKE.projectile.min,
+        SCREEN_SHAKE.projectile.max,
+      );
+      screenShake = Math.max(screenShake, projectileShake);
       if (player.shield > 0) {
         player.shield = Math.max(0, player.shield - hitDamage);
       } else {

@@ -65,24 +65,136 @@ export const BOOST_TIERS: UpgradeTier[] = [
 export interface SkinOption {
   name: string;
   description: string;
-  color: string;
+  frameIndex: number;
   cost: number;
 }
 
+export const SKIN_ATLAS = {
+  columns: 4,
+  rows: 5,
+  frameWidth: 256,
+  frameHeight: 256,
+  imageWidth: 1024,
+  imageHeight: 1536,
+  frameOffsetX: 0,
+  frameOffsetY: 70, //comment
+} as const;
+
 export const SKIN_OPTIONS: SkinOption[] = [
-  {name: "Default", description: "Original look", color: "#ffffff", cost: 0},
   {
-    name: "Nova Red",
-    description: "Fiery red tint",
-    color: "#ff7070",
-    cost: 5000,
+    name: "Classic",
+    description: "Factory standard ship",
+    frameIndex: 0,
+    cost: 0,
   },
-  {name: "Emerald", description: "Emerald green", color: "#6bffb8", cost: 8000},
   {
-    name: "Solar Gold",
-    description: "Golden chrome",
-    color: "#ffd060",
-    cost: 12000,
+    name: "Inferno",
+    description: "Molten-red strike craft",
+    frameIndex: 1,
+    cost: 300,
+  },
+  {
+    name: "Verdant",
+    description: "Emerald interceptor",
+    frameIndex: 2,
+    cost: 650,
+  },
+  {
+    name: "Nebula",
+    description: "Violet deep-space shell",
+    frameIndex: 3,
+    cost: 1000,
+  },
+  {
+    name: "Sunflare",
+    description: "Amber front armor",
+    frameIndex: 4,
+    cost: 1400,
+  },
+  {
+    name: "Midnight",
+    description: "Darkened cobalt hull",
+    frameIndex: 5,
+    cost: 1900,
+  },
+  {
+    name: "Radiant",
+    description: "Bright yellow cockpit",
+    frameIndex: 6,
+    cost: 2500,
+  },
+  {
+    name: "Aurora",
+    description: "Pink-white polished finish",
+    frameIndex: 7,
+    cost: 3200,
+  },
+  {name: "Frostline", description: "Icy cyan frame", frameIndex: 8, cost: 4000},
+  {
+    name: "Bloodline",
+    description: "Crimson hunter variant",
+    frameIndex: 9,
+    cost: 4900,
+  },
+  {
+    name: "Daystar",
+    description: "Gold-white command shell",
+    frameIndex: 10,
+    cost: 6000,
+  },
+  {
+    name: "Glacier",
+    description: "Clean blue-white plating",
+    frameIndex: 11,
+    cost: 7300,
+  },
+  {
+    name: "Jade Fang",
+    description: "Forest-green assault skin",
+    frameIndex: 12,
+    cost: 8700,
+  },
+  {
+    name: "Rosecore",
+    description: "Magenta core fusion",
+    frameIndex: 13,
+    cost: 10300,
+  },
+  {
+    name: "Skyrift",
+    description: "Bright azure wingline",
+    frameIndex: 14,
+    cost: 12100,
+  },
+  {
+    name: "Royal Ember",
+    description: "Purple-gold high rank",
+    frameIndex: 15,
+    cost: 14100,
+  },
+  {
+    name: "Bloom",
+    description: "High-gloss pink chassis",
+    frameIndex: 16,
+    cost: 16300,
+  },
+  {
+    name: "Solaris",
+    description: "Golden-black war paint",
+    frameIndex: 17,
+    cost: 18700,
+  },
+  {
+    name: "Aether",
+    description: "Blue-gold refined profile",
+    frameIndex: 18,
+    cost: 21300,
+  },
+  {
+    name: "Arctic",
+    description: "White sapphire premium",
+    frameIndex: 19,
+    cost: 24100,
   },
 ];
 
@@ -100,21 +212,43 @@ interface PersistedGarage {
   purchasedSkins: number[]; // which skin indices have been bought
 }
 
+function clampSkinIndex(value: number): number {
+  return Math.max(0, Math.min(SKIN_OPTIONS.length - 1, value));
+}
+
+function sanitizePurchasedSkins(value: unknown): number[] {
+  if (!Array.isArray(value)) return [0];
+
+  const skins = Array.from(
+    new Set(
+      value
+        .map((entry) => Number(entry))
+        .filter((entry) => Number.isInteger(entry))
+        .map((entry) => clampSkinIndex(entry)),
+    ),
+  );
+
+  if (!skins.includes(0)) skins.unshift(0);
+  return skins;
+}
+
 function loadGarage(): PersistedGarage {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<PersistedGarage>;
+      const purchasedSkins = sanitizePurchasedSkins(parsed.purchasedSkins);
+      const activeSkinIndex = clampSkinIndex(parsed.activeSkinIndex ?? 0);
       return {
         weaponLevel: Math.max(0, Math.min(2, parsed.weaponLevel ?? 0)),
         shieldLevel: Math.max(0, Math.min(10, parsed.shieldLevel ?? 0)),
         healthLevel: Math.max(0, Math.min(10, parsed.healthLevel ?? 0)),
         ammoLevel: Math.max(0, Math.min(10, parsed.ammoLevel ?? 0)),
         boostLevel: Math.max(0, Math.min(2, parsed.boostLevel ?? 0)),
-        activeSkinIndex: Math.max(0, Math.min(3, parsed.activeSkinIndex ?? 0)),
-        purchasedSkins: Array.isArray(parsed.purchasedSkins)
-          ? parsed.purchasedSkins
-          : [0],
+        activeSkinIndex: purchasedSkins.includes(activeSkinIndex)
+          ? activeSkinIndex
+          : 0,
+        purchasedSkins,
       };
     }
   } catch {
@@ -224,6 +358,7 @@ export const useGarageStore = create<GarageStore>((set, get) => {
     },
 
     buySkin: (skinIndex, spendCoins) => {
+      if (skinIndex < 0 || skinIndex >= SKIN_OPTIONS.length) return false;
       const {purchasedSkins} = get();
       if (purchasedSkins.includes(skinIndex)) return false;
       const cost = SKIN_OPTIONS[skinIndex].cost;
@@ -240,6 +375,8 @@ export const useGarageStore = create<GarageStore>((set, get) => {
     },
 
     setActiveSkin: (skinIndex) => {
+      const {purchasedSkins} = get();
+      if (!purchasedSkins.includes(skinIndex)) return;
       const updated = {...get(), activeSkinIndex: skinIndex};
       saveGarage(updated);
       set({activeSkinIndex: skinIndex});
