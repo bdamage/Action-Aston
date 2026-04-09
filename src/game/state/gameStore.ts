@@ -4,6 +4,8 @@ import {
   useGarageStore,
   weaponShootCooldown,
   shieldMaxForLevel,
+  healthMaxForLevel,
+  ammoMaxForLevel,
   startingBoostTimer,
 } from "./garageStore";
 import {cloneAlignmentTuning} from "../renderTuning";
@@ -231,6 +233,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const storedCoins = loadTotalCoins();
       const garage = useGarageStore.getState();
       const maxShield = shieldMaxForLevel(garage.shieldLevel);
+      const maxHealth = healthMaxForLevel(garage.healthLevel);
+      const maxAmmo = ammoMaxForLevel(garage.ammoLevel);
       return {
         ...base,
         totalCoins: storedCoins,
@@ -238,6 +242,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         player: {
           ...base.player,
           radius: state.alignment.player.radius,
+          maxHealth,
+          health: maxHealth,
+          maxAmmo,
+          ammo: maxAmmo,
           baseShootCooldown: weaponShootCooldown(garage.weaponLevel),
           maxShield,
           shield: maxShield,
@@ -263,6 +271,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const storedCoins = loadTotalCoins();
       const garage = useGarageStore.getState();
       const maxShield = shieldMaxForLevel(garage.shieldLevel);
+      const maxHealth = healthMaxForLevel(garage.healthLevel);
+      const maxAmmo = ammoMaxForLevel(garage.ammoLevel);
       return {
         ...base,
         totalCoins: storedCoins,
@@ -271,6 +281,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         player: {
           ...base.player,
           radius: state.alignment.player.radius,
+          maxHealth,
+          health: maxHealth,
+          maxAmmo,
+          ammo: maxAmmo,
           baseShootCooldown: weaponShootCooldown(garage.weaponLevel),
           maxShield,
           shield: maxShield,

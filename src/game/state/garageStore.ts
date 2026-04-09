@@ -9,9 +9,17 @@ export interface UpgradeTier {
 }
 
 export const WEAPON_TIERS: UpgradeTier[] = [
-  {name: "Standard Blaster", description: "Normal fire rate", cost: 0},
-  {name: "Rapid Blaster", description: "+25% fire rate", cost: 600},
-  {name: "Plasma Cannon", description: "+50% fire rate", cost: 1500},
+  {name: "Standard Blaster", description: "Base fire rate", cost: 0},
+  {name: "Rapid Blaster", description: "Cooldown 0.170 s", cost: 500},
+  {name: "Pulse Blaster", description: "Cooldown 0.161 s", cost: 1200},
+  {name: "Ion Blaster", description: "Cooldown 0.152 s", cost: 2200},
+  {name: "Rail Blaster", description: "Cooldown 0.144 s", cost: 3500},
+  {name: "Plasma Cannon", description: "Cooldown 0.136 s", cost: 5200},
+  {name: "Arc Lance", description: "Cooldown 0.129 s", cost: 7400},
+  {name: "Nova Driver", description: "Cooldown 0.122 s", cost: 10200},
+  {name: "Quantum Repeater", description: "Cooldown 0.115 s", cost: 13700},
+  {name: "Singularity Array", description: "Cooldown 0.109 s", cost: 17900},
+  {name: "Apex Stormgun", description: "Cooldown 0.103 s", cost: 23000},
 ];
 
 export const SHIELD_TIERS: UpgradeTier[] = [
@@ -58,142 +66,139 @@ export const AMMO_TIERS: UpgradeTier[] = [
 
 export const BOOST_TIERS: UpgradeTier[] = [
   {name: "No Starter Boost", description: "Boost via pickups only", cost: 0},
-  {name: "Nitro Start", description: "Start with 4 s boost", cost: 450},
-  {name: "Overdrive", description: "Start with 8 s boost", cost: 1100},
+  {name: "Nitro Start", description: "Start with 1.5 s boost", cost: 350},
+  {name: "Booster Relay", description: "Start with 3 s boost", cost: 850},
+  {name: "Overdrive", description: "Start with 4.5 s boost", cost: 1600},
+  {name: "Ignition Core", description: "Start with 6 s boost", cost: 2600},
+  {name: "Shock Intake", description: "Start with 7.5 s boost", cost: 3900},
+  {name: "Pulse Injector", description: "Start with 9 s boost", cost: 5500},
+  {name: "Warp Feed", description: "Start with 10 s boost", cost: 7600},
+  {name: "Hyper Charge", description: "Start with 10.8 s boost", cost: 10100},
+  {name: "Event Horizon", description: "Start with 11.4 s boost", cost: 13100},
+  {name: "Infinite Burn", description: "Start with 12 s boost", cost: 16800},
 ];
 
 export interface SkinOption {
   name: string;
   description: string;
-  frameIndex: number;
+  color: string;
   cost: number;
 }
-
-export const SKIN_ATLAS = {
-  columns: 4,
-  rows: 5,
-  frameWidth: 256,
-  frameHeight: 256,
-  imageWidth: 1024,
-  imageHeight: 1536,
-  frameOffsetX: 0,
-  frameOffsetY: 70, //comment
-} as const;
 
 export const SKIN_OPTIONS: SkinOption[] = [
   {
     name: "Classic",
     description: "Factory standard ship",
-    frameIndex: 0,
+    color: "#ffffff",
     cost: 0,
   },
   {
     name: "Inferno",
     description: "Molten-red strike craft",
-    frameIndex: 1,
+    color: "#ff604a",
     cost: 300,
   },
   {
     name: "Verdant",
     description: "Emerald interceptor",
-    frameIndex: 2,
+    color: "#6bff8f",
     cost: 650,
   },
   {
     name: "Nebula",
     description: "Violet deep-space shell",
-    frameIndex: 3,
+    color: "#c27cff",
     cost: 1000,
   },
   {
     name: "Sunflare",
     description: "Amber front armor",
-    frameIndex: 4,
+    color: "#ffba63",
     cost: 1400,
   },
   {
     name: "Midnight",
     description: "Darkened cobalt hull",
-    frameIndex: 5,
+    color: "#4d8eff",
     cost: 1900,
   },
   {
     name: "Radiant",
     description: "Bright yellow cockpit",
-    frameIndex: 6,
+    color: "#ffe470",
     cost: 2500,
   },
   {
     name: "Aurora",
     description: "Pink-white polished finish",
-    frameIndex: 7,
+    color: "#ff9ff2",
     cost: 3200,
   },
-  {name: "Frostline", description: "Icy cyan frame", frameIndex: 8, cost: 4000},
+  {name: "Frostline", description: "Icy cyan frame", color: "#79e9ff", cost: 4000},
   {
     name: "Bloodline",
     description: "Crimson hunter variant",
-    frameIndex: 9,
+    color: "#ff4a63",
     cost: 4900,
   },
   {
     name: "Daystar",
     description: "Gold-white command shell",
-    frameIndex: 10,
+    color: "#ffd95e",
     cost: 6000,
   },
   {
     name: "Glacier",
     description: "Clean blue-white plating",
-    frameIndex: 11,
+    color: "#9cd7ff",
     cost: 7300,
   },
   {
     name: "Jade Fang",
     description: "Forest-green assault skin",
-    frameIndex: 12,
+    color: "#46dd71",
     cost: 8700,
   },
   {
     name: "Rosecore",
     description: "Magenta core fusion",
-    frameIndex: 13,
+    color: "#ff75cf",
     cost: 10300,
   },
   {
     name: "Skyrift",
     description: "Bright azure wingline",
-    frameIndex: 14,
+    color: "#6bc0ff",
     cost: 12100,
   },
   {
     name: "Royal Ember",
     description: "Purple-gold high rank",
-    frameIndex: 15,
+    color: "#d58cff",
     cost: 14100,
   },
   {
     name: "Bloom",
     description: "High-gloss pink chassis",
-    frameIndex: 16,
+    color: "#ff8cde",
     cost: 16300,
   },
   {
     name: "Solaris",
     description: "Golden-black war paint",
-    frameIndex: 17,
+    color: "#ffcf58",
     cost: 18700,
   },
   {
     name: "Aether",
     description: "Blue-gold refined profile",
-    frameIndex: 18,
+    color: "#86b7ff",
     cost: 21300,
   },
   {
     name: "Arctic",
     description: "White sapphire premium",
-    frameIndex: 19,
+    color: "#9ee8ff",
     cost: 24100,
   },
 ];
@@ -240,11 +245,26 @@ function loadGarage(): PersistedGarage {
       const purchasedSkins = sanitizePurchasedSkins(parsed.purchasedSkins);
       const activeSkinIndex = clampSkinIndex(parsed.activeSkinIndex ?? 0);
       return {
-        weaponLevel: Math.max(0, Math.min(2, parsed.weaponLevel ?? 0)),
-        shieldLevel: Math.max(0, Math.min(10, parsed.shieldLevel ?? 0)),
-        healthLevel: Math.max(0, Math.min(10, parsed.healthLevel ?? 0)),
-        ammoLevel: Math.max(0, Math.min(10, parsed.ammoLevel ?? 0)),
-        boostLevel: Math.max(0, Math.min(2, parsed.boostLevel ?? 0)),
+        weaponLevel: Math.max(
+          0,
+          Math.min(WEAPON_TIERS.length - 1, parsed.weaponLevel ?? 0),
+        ),
+        shieldLevel: Math.max(
+          0,
+          Math.min(SHIELD_TIERS.length - 1, parsed.shieldLevel ?? 0),
+        ),
+        healthLevel: Math.max(
+          0,
+          Math.min(HEALTH_TIERS.length - 1, parsed.healthLevel ?? 0),
+        ),
+        ammoLevel: Math.max(
+          0,
+          Math.min(AMMO_TIERS.length - 1, parsed.ammoLevel ?? 0),
+        ),
+        boostLevel: Math.max(
+          0,
+          Math.min(BOOST_TIERS.length - 1, parsed.boostLevel ?? 0),
+        ),
         activeSkinIndex: purchasedSkins.includes(activeSkinIndex)
           ? activeSkinIndex
           : 0,
@@ -388,9 +408,8 @@ export const useGarageStore = create<GarageStore>((set, get) => {
 
 /** Shoot cooldown in seconds for a given weapon level (normal / while boosting). */
 export function weaponShootCooldown(level: number): number {
-  if (level >= 2) return 0.12; // –33 %
-  if (level >= 1) return 0.145; // –19 %
-  return 0.18; // base
+  const values = [0.18, 0.17, 0.161, 0.152, 0.144, 0.136, 0.129, 0.122, 0.115, 0.109, 0.103];
+  return values[Math.min(level, values.length - 1)];
 }
 
 /** Max shield for a given shield level (0–10). */
@@ -413,7 +432,6 @@ export function ammoMaxForLevel(level: number): number {
 
 /** Starting boost timer (seconds) for a given boost level. */
 export function startingBoostTimer(level: number): number {
-  if (level >= 2) return 8;
-  if (level >= 1) return 4;
-  return 0;
+  const values = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10, 10.8, 11.4, 12];
+  return values[Math.min(level, values.length - 1)];
 }
