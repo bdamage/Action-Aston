@@ -4,7 +4,7 @@ import type {Enemy, EnemyType, GameState} from "../types";
 const ENEMY_TYPES: EnemyType[] = ["enemy01", "enemy02", "enemy03"];
 const LANE_COUNT = 9;
 const FIRST_BOSS_WAVE = 10;
-const FINAL_BOSS_WAVE = 8;
+const FINAL_BOSS_WAVE = 20;
 
 interface WavePattern {
   lanes: number[];

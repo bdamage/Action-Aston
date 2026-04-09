@@ -1,4 +1,4 @@
-import {Howl} from "howler";
+import {Howl, Howler} from "howler";
 import bossMusicUrl from "../assets/music_boss.mp3";
 import gameplayMusicUrl from "../assets/music_gameplay.mp3";
 import leaderboardMusicUrl from "../assets/music_leaderboard.mp3";
@@ -42,6 +42,7 @@ class SoundManager {
   private sfxEnabled = true;
   private musicVolume = 1;
   private sfxVolume = 1;
+  private audioUnlocked = false;
   private activeMusicTrack: MusicTrack | null = null;
   private musicStopTimers: Partial<
     Record<MusicTrack, ReturnType<typeof setTimeout>>
@@ -162,6 +163,25 @@ class SoundManager {
     };
   }
 
+  async unlockAudio() {
+    if (this.audioUnlocked) {
+      return;
+    }
+
+    try {
+      if (Howler.ctx && Howler.ctx.state !== "running") {
+        await Howler.ctx.resume();
+      }
+      this.audioUnlocked = true;
+    } catch {
+      return;
+    }
+
+    if (this.musicEnabled && this.activeMusicTrack) {
+      this.playMusic(this.activeMusicTrack, 0);
+    }
+  }
+
   setEnabled(enabled: boolean) {
     this.musicEnabled = enabled;
     this.sfxEnabled = enabled;
@@ -206,6 +226,10 @@ class SoundManager {
     this.activeMusicTrack = track;
 
     if (!this.musicEnabled) {
+      return;
+    }
+
+    if (!this.audioUnlocked) {
       return;
     }
 

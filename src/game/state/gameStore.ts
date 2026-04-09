@@ -75,8 +75,9 @@ function normalizeMovement(x: number, y: number) {
 
 const SIMULATION_SPEED = 0.7;
 const HIT_FLASH_DURATION = 0.16;
-const FIRST_BOSS_HOVER_Y = HALF_HEIGHT - 1.55;
-const FINAL_BOSS_HOVER_Y = HALF_HEIGHT - 2.05;
+const BOSS_HOVER_DOWN_SHIFT = HALF_HEIGHT * 0.2;
+const FIRST_BOSS_HOVER_Y = HALF_HEIGHT - 1.55 - BOSS_HOVER_DOWN_SHIFT;
+const FINAL_BOSS_HOVER_Y = HALF_HEIGHT - 2.05 - BOSS_HOVER_DOWN_SHIFT;
 
 function isBossEnemy(enemy: Enemy) {
   return enemy.type === "firstBoss" || enemy.type === "finalBoss";

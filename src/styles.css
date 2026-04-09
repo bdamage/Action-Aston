@@ -41,8 +41,8 @@ body,
 
 .menu-hero-side {
   position: absolute;
-  top: clamp(5rem, 14dvh, 7rem);
-  bottom: clamp(8.5rem, 21dvh, 12.5rem);
+  top: clamp(6rem, 16dvh, 8rem);
+  bottom: clamp(7.5rem, 19dvh, 11.5rem);
   width: clamp(8rem, 26vw, 18rem);
   pointer-events: none;
   z-index: 1;
@@ -50,11 +50,11 @@ body,
 }
 
 .menu-hero-side-left {
-  left: clamp(-2.25rem, -3vw, -0.5rem);
+  left: clamp(-1rem, -1vw, 0.75rem);
 }
 
 .menu-hero-side-right {
-  right: clamp(-2.25rem, -3vw, -0.5rem);
+  right: clamp(-1rem, -1vw, 0.75rem);
 }
 
 .menu-hero-upper-crop {
@@ -134,8 +134,8 @@ body,
   }
 
   .menu-hero-side {
-    top: clamp(4.5rem, 15dvh, 6rem);
-    bottom: clamp(8rem, 20dvh, 11rem);
+    top: clamp(5.25rem, 17dvh, 6.75rem);
+    bottom: clamp(7.25rem, 18dvh, 10.25rem);
     width: clamp(6.75rem, 25vw, 11rem);
     opacity: 0.72;
   }

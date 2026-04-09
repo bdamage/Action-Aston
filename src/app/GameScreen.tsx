@@ -1,5 +1,5 @@
 import { Canvas, useThree } from '@react-three/fiber';
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { MainMenu } from '../ui/MainMenu';
 import { SpriteAlignmentOverlay } from '../ui/SpriteAlignmentOverlay';
@@ -94,6 +94,20 @@ export function GameScreen() {
       setPhase('menu');
     }
   }, [isDev, phase, setPhase]);
+
+  useEffect(() => {
+    const unlockAudio = () => {
+      void soundManager.unlockAudio();
+    };
+
+    window.addEventListener('pointerdown', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -192,6 +206,16 @@ export function GameScreen() {
     }
   }
 
+  const handleStart = useCallback(() => {
+    void soundManager.unlockAudio();
+    startGame();
+  }, [startGame]);
+
+  const handleStartAlignment = useCallback(() => {
+    void soundManager.unlockAudio();
+    startAlignment();
+  }, [startAlignment]);
+
   return (
     <main className="relative h-[100dvh] w-screen overflow-hidden bg-black">
       <GameErrorBoundary>
@@ -223,8 +247,8 @@ export function GameScreen() {
 
       {phase === 'menu' && (
         <MainMenu
-          onStart={startGame}
-          onOpenAlignment={isDev ? startAlignment : undefined}
+          onStart={handleStart}
+          onOpenAlignment={isDev ? handleStartAlignment : undefined}
           onOpenOptions={() => setOptionsOpen(true)}
           leaderboard={leaderboard}
           loadingLeaderboard={loadingLeaderboard}
