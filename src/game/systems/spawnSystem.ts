@@ -4,6 +4,7 @@ import type {Enemy, EnemyType, FormationType, GameState} from "../types";
 const ENEMY_TYPES: EnemyType[] = ["enemy01", "enemy02", "enemy03"];
 const LANE_COUNT = 9;
 const FIRST_BOSS_WAVE = 10;
+const THIRD_BOSS_WAVE = 25;
 const FINAL_BOSS_WAVE = 20;
 
 interface WavePattern {
@@ -233,19 +234,25 @@ function laneToX(laneIndex: number) {
 
 function spawnBoss(state: GameState, type: EnemyType): Enemy {
   const isFinal = type === "finalBoss";
-  const baseHp = isFinal ? 820 : 520;
-  const hp = Math.floor(baseHp + state.difficulty * (isFinal ? 70 : 48));
+  const isThird = type === "thirdBoss";
+  let baseHp: number;
+  if (isFinal) baseHp = 820;
+  else if (isThird) baseHp = 680;
+  else baseHp = 520;
+  const diffMul = isFinal ? 70 : isThird ? 58 : 48;
+  const hp = Math.floor(baseHp + state.difficulty * diffMul);
 
   return {
     id: state.nextEnemyId++,
     type,
     position: {x: 0, y: HALF_HEIGHT + 2.2},
-    radius: state.alignment.enemy.radius * (isFinal ? 2.5 : 2.1),
+    radius:
+      state.alignment.enemy.radius * (isFinal ? 2.5 : isThird ? 2.3 : 2.1),
     hp,
     maxHp: hp,
-    speed: isFinal ? 0.9 : 1.1,
-    trackStrength: isFinal ? 0.65 : 0.55,
-    fireCooldown: isFinal ? 0.7 : 0.95,
+    speed: isFinal ? 0.9 : isThird ? 1.0 : 1.1,
+    trackStrength: isFinal ? 0.65 : isThird ? 0.6 : 0.55,
+    fireCooldown: isFinal ? 0.7 : isThird ? 0.8 : 0.95,
     hitFlash: 0,
   };
 }
@@ -273,6 +280,12 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
     state.wave = nextWave;
     state.spawnTimer = Math.max(1.35, 2.2 - state.difficulty * 0.03);
     return [spawnBoss(state, "finalBoss")];
+  }
+
+  if (nextWave === THIRD_BOSS_WAVE) {
+    state.wave = nextWave;
+    state.spawnTimer = Math.max(1.3, 2.1 - state.difficulty * 0.03);
+    return [spawnBoss(state, "thirdBoss")];
   }
 
   const pattern = WAVE_PATTERNS[(nextWave - 1) % WAVE_PATTERNS.length];

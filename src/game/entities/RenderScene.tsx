@@ -6,6 +6,7 @@ import { Starfield } from '../../components/Starfield';
 import { atlas, type SpriteKey } from '../../assets/assetConfig';
 import firstBossUrl from '../../assets/first_boss.png';
 import finalBossUrl from '../../assets/final_boss.png';
+import thirdBossUrl from '../../assets/boss03.png';
 import { getDpiSpriteScaleMultiplier, SPRITE_SCALE } from '../renderTuning';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameStore } from '../state/gameStore';
@@ -82,11 +83,12 @@ export function RenderScene() {
   );
 
   const baseTexture = useLoader(THREE.TextureLoader, atlas.url);
-  const [firstBossTexture, finalBossTexture] = useLoader(THREE.TextureLoader, [firstBossUrl, finalBossUrl]);
+  const [firstBossTexture, finalBossTexture, thirdBossTexture] = useLoader(THREE.TextureLoader, [firstBossUrl, finalBossUrl, thirdBossUrl]);
 
   const bossTextures = useMemo(() => {
     const output = {
       firstBoss: firstBossTexture,
+      thirdBoss: thirdBossTexture,
       finalBoss: finalBossTexture
     };
 
@@ -125,6 +127,9 @@ export function RenderScene() {
     if (enemyType === 'firstBoss') {
       return scaledSizeFromTexture(bossTextures.firstBoss, alignment.enemy.h * 2.7, spriteScaleMultiplier);
     }
+    if (enemyType === 'thirdBoss') {
+      return scaledSizeFromTexture(bossTextures.thirdBoss, alignment.enemy.h * 2.9, spriteScaleMultiplier);
+    }
     if (enemyType === 'finalBoss') {
       return scaledSizeFromTexture(bossTextures.finalBoss, alignment.enemy.h * 3.1, spriteScaleMultiplier);
     }
@@ -134,6 +139,7 @@ export function RenderScene() {
 
   const getEnemyTexture = (enemyType: EnemyType): THREE.Texture => {
     if (enemyType === 'firstBoss') return bossTextures.firstBoss;
+    if (enemyType === 'thirdBoss') return bossTextures.thirdBoss;
     if (enemyType === 'finalBoss') return bossTextures.finalBoss;
     return textures[enemyType];
   };

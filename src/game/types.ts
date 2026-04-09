@@ -15,6 +15,7 @@ export type EnemyType =
   | "enemy02"
   | "enemy03"
   | "firstBoss"
+  | "thirdBoss"
   | "finalBoss";
 export type PickupType = "health" | "shield" | "ammo" | "boost";
 export type FormationType =

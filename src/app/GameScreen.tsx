@@ -58,7 +58,7 @@ export function GameScreen() {
 
   const phase = useGameStore((state) => state.phase);
   const bossFightActive = useGameStore((state) =>
-    state.enemies.some((enemy) => enemy.type === 'firstBoss' || enemy.type === 'finalBoss')
+    state.enemies.some((enemy) => enemy.type === 'firstBoss' || enemy.type === 'thirdBoss' || enemy.type === 'finalBoss')
   );
   const score = useGameStore((state) => state.score);
   const wave = useGameStore((state) => state.wave);

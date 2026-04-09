@@ -80,10 +80,15 @@ const SIMULATION_SPEED = 0.7;
 const HIT_FLASH_DURATION = 0.16;
 const BOSS_HOVER_DOWN_SHIFT = HALF_HEIGHT * 0.2;
 const FIRST_BOSS_HOVER_Y = HALF_HEIGHT - 1.55 - BOSS_HOVER_DOWN_SHIFT;
+const THIRD_BOSS_HOVER_Y = HALF_HEIGHT - 1.8 - BOSS_HOVER_DOWN_SHIFT;
 const FINAL_BOSS_HOVER_Y = HALF_HEIGHT - 2.05 - BOSS_HOVER_DOWN_SHIFT;
 
 function isBossEnemy(enemy: Enemy) {
-  return enemy.type === "firstBoss" || enemy.type === "finalBoss";
+  return (
+    enemy.type === "firstBoss" ||
+    enemy.type === "thirdBoss" ||
+    enemy.type === "finalBoss"
+  );
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -265,7 +270,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
           ? Math.max(
               enemy.type === "finalBoss"
                 ? FINAL_BOSS_HOVER_Y
-                : FIRST_BOSS_HOVER_Y,
+                : enemy.type === "thirdBoss"
+                  ? THIRD_BOSS_HOVER_Y
+                  : FIRST_BOSS_HOVER_Y,
               enemy.position.y - enemy.speed * frameDt,
             )
           : enemy.position.y - enemy.speed * frameDt;
