@@ -45,6 +45,7 @@ function createBaseState(): GameState {
   return {
     phase: "menu",
     score: 0,
+    coinsCollected: 0,
     elapsed: 0,
     difficulty: 1,
     wave: 0,
@@ -53,6 +54,7 @@ function createBaseState(): GameState {
     nextProjectileId: 1,
     nextPickupId: 1,
     nextExplosionId: 1,
+    nextCoinId: 1,
     player: {
       ...PLAYER_BASE,
       position: {...PLAYER_BASE.position},
@@ -61,6 +63,7 @@ function createBaseState(): GameState {
     enemies: [],
     projectiles: [],
     pickups: [],
+    coins: [],
     explosions: [],
     alignment,
     lastFormation: null,
