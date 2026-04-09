@@ -9,6 +9,7 @@ import { HUD } from '../ui/HUD';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { TouchControls } from '../ui/TouchControls';
 import { OptionsOverlay } from '../ui/OptionsOverlay';
+import { GarageOverlay } from '../ui/GarageOverlay';
 import { GameErrorBoundary } from '../ui/GameErrorBoundary';
 import { useInputBindings } from '../game/hooks/useInput';
 import { RenderScene } from '../game/entities/RenderScene';
@@ -89,6 +90,7 @@ export function GameScreen() {
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [garageOpen, setGarageOpen] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(initialAudioSettings.musicEnabled);
   const [sfxEnabled, setSfxEnabled] = useState(initialAudioSettings.sfxEnabled);
   const [musicVolume, setMusicVolume] = useState(initialAudioSettings.musicVolume);
@@ -263,6 +265,7 @@ export function GameScreen() {
           onOpenAlignment={isDev ? handleStartAlignment : undefined}
           onOpenClippingDebug={isDev ? toggleHitboxes : undefined}
           onOpenOptions={() => setOptionsOpen(true)}
+          onOpenGarage={() => setGarageOpen(true)}
           leaderboard={leaderboard}
           loadingLeaderboard={loadingLeaderboard}
           leaderboardError={leaderboardError}
@@ -281,6 +284,10 @@ export function GameScreen() {
           onSfxVolumeChange={setSfxVolume}
           onClose={() => setOptionsOpen(false)}
         />
+      )}
+
+      {phase === 'menu' && garageOpen && (
+        <GarageOverlay onClose={() => setGarageOpen(false)} />
       )}
 
       {isDev && phase === 'alignment' && (

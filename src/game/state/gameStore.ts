@@ -1,5 +1,6 @@
 import {create} from "zustand";
 import {HALF_HEIGHT, HALF_WIDTH, PLAYER_BASE} from "../constants";
+import {useGarageStore, weaponShootCooldown, shieldMaxForLevel, startingBoostTimer} from "./garageStore";
 import {cloneAlignmentTuning} from "../renderTuning";
 import {clamp, intersects} from "../systems/collisionSystem";
 import {createPickup, maybeCreatePickup} from "../systems/pickupSystem";
@@ -38,6 +39,8 @@ interface GameStore extends GameState {
   toggleHitboxes: () => void;
   setMovement: (movement: Vector2) => void;
   setShooting: (shooting: boolean) => void;
+  /** Deducts `amount` from totalCoins if sufficient funds. Returns true on success. */
+  spendCoins: (amount: number) => boolean;
   step: (dt: number) => void;
 }
 
@@ -156,12 +159,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
     }),
   toggleHitboxes: () => set((state) => ({showHitboxes: !state.showHitboxes})),
+  spendCoins: (amount) => {
+    const { totalCoins } = get();
+    if (totalCoins < amount) return false;
+    const next = totalCoins - amount;
+    saveTotalCoins(next);
+    set({ totalCoins: next });
+    return true;
+  },
   startGame: () =>
     set((state) => {
       if (state.phase === "playing") {
         return state;
       }
       const base = createBaseState();
+      const garage = useGarageStore.getState();
+      const maxShield = shieldMaxForLevel(garage.shieldLevel);
       return {
         ...base,
         totalCoins: state.totalCoins,
@@ -169,6 +182,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         player: {
           ...base.player,
           radius: state.alignment.player.radius,
+          baseShootCooldown: weaponShootCooldown(garage.weaponLevel),
+          maxShield,
+          shield: maxShield,
+          boostTimer: startingBoostTimer(garage.boostLevel),
         },
         phase: "playing",
       };
@@ -187,6 +204,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   restartGame: () =>
     set((state) => {
       const base = createBaseState();
+      const garage = useGarageStore.getState();
+      const maxShield = shieldMaxForLevel(garage.shieldLevel);
       return {
         ...base,
         totalCoins: state.totalCoins,
@@ -195,6 +214,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         player: {
           ...base.player,
           radius: state.alignment.player.radius,
+          baseShootCooldown: weaponShootCooldown(garage.weaponLevel),
+          maxShield,
+          shield: maxShield,
+          boostTimer: startingBoostTimer(garage.boostLevel),
         },
       };
     }),
@@ -257,7 +280,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         });
       }
 
-      player.shootCooldown = player.boostTimer > 0 ? 0.09 : 0.18;
+      player.shootCooldown = player.boostTimer > 0 ? player.baseShootCooldown / 2 : player.baseShootCooldown;
       player.ammo = Math.max(0, player.ammo - 1);
       soundManager.playShoot();
     }
@@ -579,9 +602,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const phase: GamePhase = player.health <= 0 ? "gameover" : "playing";
 
-    const prevPhase = state.phase;
     let totalCoins = state.totalCoins;
-    if (phase === "gameover" && prevPhase !== "gameover") {
+    if (phase === "gameover") {
       totalCoins = state.totalCoins + coinsCollected;
       saveTotalCoins(totalCoins);
     }

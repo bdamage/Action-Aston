@@ -16,6 +16,7 @@ export const PLAYER_BASE: Player = {
   ammo: 180,
   maxAmmo: 220,
   shootCooldown: 0,
+  baseShootCooldown: 0.18,
   boostTimer: 0,
   hitFlash: 0,
 };

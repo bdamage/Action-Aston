@@ -9,6 +9,7 @@ import finalBossUrl from '../../assets/final_boss.png';
 import thirdBossUrl from '../../assets/boss03.png';
 import coinUrl from '../../assets/coin.png';
 import { getDpiSpriteScaleMultiplier, SPRITE_SCALE } from '../renderTuning';
+import { useGarageStore, SKIN_OPTIONS } from '../state/garageStore';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameStore } from '../state/gameStore';
 import type { EnemyType } from '../types';
@@ -158,6 +159,9 @@ export function RenderScene() {
   const maxExplosions = isTouch ? 28 : 60;
   const starDensity = isTouch ? 70 : 120;
 
+  const activeSkinIndex = useGarageStore((state) => state.activeSkinIndex);
+  const skinTint = SKIN_OPTIONS[activeSkinIndex]?.color ?? '#ffffff';
+
   const player = useGameStore((state) => state.player);
   const phase = useGameStore((state) => state.phase);
   const alignment = useGameStore((state) => state.alignment);
@@ -185,6 +189,7 @@ export function RenderScene() {
         texture={textures.player}
         position={inAlignmentMode ? [0, 0, 0] : [player.position.x, player.position.y, 0]}
         size={playerSize}
+        tint={skinTint}
         flashOpacity={!inAlignmentMode ? hitFlashOpacity(player.hitFlash) : 0}
         rotationZ={Math.PI}
       />

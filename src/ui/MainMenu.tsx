@@ -8,6 +8,7 @@ interface MainMenuProps {
   onOpenAlignment?: () => void;
   onOpenClippingDebug?: () => void;
   onOpenOptions: () => void;
+  onOpenGarage: () => void;
   leaderboard: LeaderboardEntry[];
   loadingLeaderboard: boolean;
   leaderboardError: string | null;
@@ -18,6 +19,7 @@ export function MainMenu({
   onOpenAlignment,
   onOpenClippingDebug,
   onOpenOptions,
+  onOpenGarage,
   leaderboard,
   loadingLeaderboard,
   leaderboardError,
@@ -118,6 +120,14 @@ export function MainMenu({
               Clipping Debug
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={onOpenGarage}
+            className="mt-3 w-full rounded-xl border border-cyan-400/60 bg-cyan-900/40 px-4 py-3 text-sm font-bold uppercase tracking-wide text-cyan-100 active:scale-[0.98]"
+          >
+            🔧 Garage
+          </button>
 
           <button
             type="button"

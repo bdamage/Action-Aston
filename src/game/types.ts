@@ -42,6 +42,8 @@ export interface Player {
   ammo: number;
   maxAmmo: number;
   shootCooldown: number;
+  /** Base cooldown between shots (seconds). Derived from weapon upgrade level. */
+  baseShootCooldown: number;
   boostTimer: number;
   hitFlash: number;
 }
