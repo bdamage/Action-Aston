@@ -18,6 +18,12 @@ import { useGameStore } from '../game/state/gameStore';
 import { soundManager } from '../game/SoundManager';
 import { fetchLeaderboard, submitScore, type LeaderboardEntry } from './leaderboard';
 
+const BOSS_NAMES: Record<string, string> = {
+  firstBoss: 'UNIT ALPHA',
+  thirdBoss: 'UNIT GAMMA',
+  finalBoss: 'FINAL BOSS',
+};
+
 function SceneLoadingFallback() {
   return (
     <>
@@ -57,9 +63,10 @@ export function GameScreen() {
   const initialAudioSettings = useMemo(() => soundManager.getSettings(), []);
 
   const phase = useGameStore((state) => state.phase);
-  const bossFightActive = useGameStore((state) =>
-    state.enemies.some((enemy) => enemy.type === 'firstBoss' || enemy.type === 'thirdBoss' || enemy.type === 'finalBoss')
+  const activeBoss = useGameStore((state) =>
+    state.enemies.find((enemy) => enemy.type === 'firstBoss' || enemy.type === 'thirdBoss' || enemy.type === 'finalBoss') ?? null
   );
+  const bossFightActive = activeBoss !== null;
   const score = useGameStore((state) => state.score);
   const wave = useGameStore((state) => state.wave);
   const player = useGameStore((state) => state.player);
@@ -291,6 +298,9 @@ export function GameScreen() {
           shield={player.shield}
           ammo={player.ammo}
           boost={player.boostTimer}
+          bossName={activeBoss ? BOSS_NAMES[activeBoss.type] : undefined}
+          bossHealth={activeBoss?.hp}
+          bossMaxHealth={activeBoss?.maxHp}
           lastFormation={lastFormation}
           onPause={() => setPhase(phase === 'paused' ? 'playing' : 'paused')}
         />

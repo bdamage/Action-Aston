@@ -78,6 +78,14 @@ export interface Pickup {
   value: number;
 }
 
+export interface Coin {
+  id: number;
+  position: Vector2;
+  radius: number;
+  vx: number;
+  value: number;
+}
+
 export interface Explosion {
   id: number;
   position: Vector2;
@@ -94,6 +102,7 @@ export interface InputState {
 export interface GameState {
   phase: GamePhase;
   score: number;
+  coinsCollected: number;
   elapsed: number;
   difficulty: number;
   wave: number;
@@ -102,10 +111,12 @@ export interface GameState {
   nextProjectileId: number;
   nextPickupId: number;
   nextExplosionId: number;
+  nextCoinId: number;
   player: Player;
   enemies: Enemy[];
   projectiles: Projectile[];
   pickups: Pickup[];
+  coins: Coin[];
   explosions: Explosion[];
   input: InputState;
   alignment: SpriteAlignmentTuning;

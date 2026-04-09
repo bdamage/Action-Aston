@@ -12,6 +12,7 @@ import {soundManager} from "../SoundManager";
 import type {
   AlignmentField,
   AlignmentSpriteKey,
+  Coin,
   Enemy,
   Explosion,
   GamePhase,
