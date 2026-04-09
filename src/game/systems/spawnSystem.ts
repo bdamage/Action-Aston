@@ -141,7 +141,9 @@ function layoutDiagonal(
     const t = count > 1 ? i / (count - 1) : 0.5;
     const x = xDir * (t * spread - spread / 2);
     return {
-      x: Math.max(-HALF_WIDTH + 0.8, Math.min(HALF_WIDTH - 0.8, x)) + rand(-0.1, 0.1),
+      x:
+        Math.max(-HALF_WIDTH + 0.8, Math.min(HALF_WIDTH - 0.8, x)) +
+        rand(-0.1, 0.1),
       y: HALF_HEIGHT + 0.7 + i * 0.72,
     };
   });
@@ -190,7 +192,14 @@ function getAvailableFormations(
   } else if (wave < 8) {
     allowed = ["random", "V", "diagonal-left", "diagonal-right", "arc"];
   } else {
-    allowed = ["random", "V", "diagonal-left", "diagonal-right", "arc", "pincer"];
+    allowed = [
+      "random",
+      "V",
+      "diagonal-left",
+      "diagonal-right",
+      "arc",
+      "pincer",
+    ];
   }
   const filtered = patternFormations.filter((f) => allowed.includes(f));
   return filtered.length > 0 ? filtered : ["random"];
@@ -272,12 +281,17 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
     2 + Math.floor(nextWave / 3) + Math.floor(state.difficulty / 3.2),
   );
 
-  const availableFormations = getAvailableFormations(nextWave, pattern.formations);
-  const formation = availableFormations[randInt(0, availableFormations.length - 1)];
+  const availableFormations = getAvailableFormations(
+    nextWave,
+    pattern.formations,
+  );
+  const formation =
+    availableFormations[randInt(0, availableFormations.length - 1)];
   const positions = getFormationLayout(formation, enemyCount, pattern);
-  const holdTimer = formation === "random"
-    ? 0
-    : Math.max(0.4, Math.min(1.8, 1.8 - nextWave * 0.08));
+  const holdTimer =
+    formation === "random"
+      ? 0
+      : Math.max(0.4, Math.min(1.8, 1.8 - nextWave * 0.08));
 
   const spawned: Enemy[] = [];
 
