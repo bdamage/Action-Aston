@@ -43,7 +43,9 @@ class SoundManager {
   private musicVolume = 1;
   private sfxVolume = 1;
   private activeMusicTrack: MusicTrack | null = null;
-  private musicStopTimers: Partial<Record<MusicTrack, ReturnType<typeof setTimeout>>> = {};
+  private musicStopTimers: Partial<
+    Record<MusicTrack, ReturnType<typeof setTimeout>>
+  > = {};
 
   private shoot = createSound(SOUND_SOURCES.shoot, 0.22);
   private explosion = createSound(SOUND_SOURCES.explosion, 0.3);

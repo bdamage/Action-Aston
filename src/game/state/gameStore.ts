@@ -249,7 +249,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const fireCooldown = enemy.fireCooldown - frameDt;
         const nextY = isBossEnemy(enemy)
           ? Math.max(
-              enemy.type === "finalBoss" ? FINAL_BOSS_HOVER_Y : FIRST_BOSS_HOVER_Y,
+              enemy.type === "finalBoss"
+                ? FINAL_BOSS_HOVER_Y
+                : FIRST_BOSS_HOVER_Y,
               enemy.position.y - enemy.speed * frameDt,
             )
           : enemy.position.y - enemy.speed * frameDt;
