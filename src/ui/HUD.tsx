@@ -1,3 +1,14 @@
+import { useEffect, useRef, useState } from 'react';
+import type { FormationType } from '../game/types';
+
+const FORMATION_LABELS: Partial<Record<FormationType, string>> = {
+  V: 'V-FORMATION',
+  'diagonal-left': 'DIAGONAL ATTACK',
+  'diagonal-right': 'DIAGONAL ATTACK',
+  arc: 'ARC SWEEP',
+  pincer: 'PINCER INCOMING',
+};
+
 interface HUDProps {
   score: number;
   wave: number;
@@ -8,6 +19,7 @@ interface HUDProps {
   bossName?: string;
   bossHealth?: number;
   bossMaxHealth?: number;
+  lastFormation?: FormationType | null;
   onPause: () => void;
 }
 
@@ -38,7 +50,7 @@ function Meter({
   );
 }
 
-export function HUD({ score, wave, health, shield, ammo, boost, bossName, bossHealth, bossMaxHealth, onPause }: HUDProps) {
+export function HUD({ score, wave, health, shield, ammo, boost, bossName, bossHealth, bossMaxHealth, lastFormation, onPause }: HUDProps) {
   const showBossBar =
     typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && bossMaxHealth > 0;
   const bossRatio =
@@ -46,8 +58,38 @@ export function HUD({ score, wave, health, shield, ammo, boost, bossName, bossHe
       ? Math.max(0, Math.min(1, bossHealth / bossMaxHealth))
       : 0;
 
+  const [announcementText, setAnnouncementText] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!lastFormation) return;
+    const label = FORMATION_LABELS[lastFormation];
+    if (!label) return;
+
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    setAnnouncementText(label);
+    setVisible(true);
+    fadeTimerRef.current = setTimeout(() => setVisible(false), 1600);
+    return () => {
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    };
+  }, [lastFormation]);
+
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
+      {announcementText && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-[max(5rem,calc(env(safe-area-inset-top)+4rem))] z-30 -translate-x-1/2 select-none text-center text-sm font-bold uppercase tracking-[0.2em] text-cyan-200"
+          style={{
+            opacity: visible ? 1 : 0,
+            transition: 'opacity 0.45s ease-out',
+            textShadow: '0 0 14px rgba(100,220,255,0.85)',
+          }}
+        >
+          {announcementText}
+        </div>
+      )}
       <div className="pointer-events-auto absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] rounded-xl bg-black/45 p-3 text-right backdrop-blur">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-slate-400">Score</div>

@@ -145,6 +145,7 @@ export function RenderScene() {
   const player = useGameStore((state) => state.player);
   const phase = useGameStore((state) => state.phase);
   const alignment = useGameStore((state) => state.alignment);
+  const showHitboxes = useGameStore((state) => state.showHitboxes);
   const enemies = useGameStore((state) => state.enemies);
   const projectiles = useGameStore((state) => state.projectiles);
   const pickups = useGameStore((state) => state.pickups);
@@ -177,6 +178,15 @@ export function RenderScene() {
           width={playerSize[0]}
           height={playerSize[1]}
           radius={alignment.player.radius}
+        />
+      )}
+
+      {!inAlignmentMode && showHitboxes && (
+        <BoundsOverlay
+          position={[player.position.x, player.position.y, 0]}
+          width={playerSize[0]}
+          height={playerSize[1]}
+          radius={player.radius}
         />
       )}
 
@@ -232,6 +242,19 @@ export function RenderScene() {
           rotationZ={Math.PI}
         />
       ))}
+
+      {!inAlignmentMode && showHitboxes && enemies.map((enemy) => {
+        const size = getEnemySize(enemy.type);
+        return (
+          <BoundsOverlay
+            key={`hb-enemy-${enemy.id}`}
+            position={[enemy.position.x, enemy.position.y, 0]}
+            width={size[0]}
+            height={size[1]}
+            radius={enemy.radius}
+          />
+        );
+      })}
 
       {!inAlignmentMode && projectiles.map((projectile) => (
         <group key={projectile.id}>
@@ -308,6 +331,43 @@ export function RenderScene() {
           )}
         />
       ))}
+
+      {!inAlignmentMode && showHitboxes && pickups.map((pickup) => {
+        const pickupSize = scaledSizeFromFrame(
+          pickup.type === 'health' ? 'pickupHealth'
+            : pickup.type === 'shield' ? 'pickupShield'
+            : pickup.type === 'ammo' ? 'pickupAmmo'
+            : 'pickupBoost',
+          alignment.pickup.h,
+          spriteScaleMultiplier
+        );
+        return (
+          <BoundsOverlay
+            key={`hb-pickup-${pickup.id}`}
+            position={[pickup.position.x, pickup.position.y, 0]}
+            width={pickupSize[0]}
+            height={pickupSize[1]}
+            radius={pickup.radius}
+          />
+        );
+      })}
+
+      {!inAlignmentMode && showHitboxes && projectiles.map((projectile) => {
+        const projSize = scaledSizeFromFrame(
+          projectile.from === 'player' ? 'laserBlue' : 'laserRed',
+          alignment.projectile.h,
+          spriteScaleMultiplier
+        );
+        return (
+          <BoundsOverlay
+            key={`hb-proj-${projectile.id}`}
+            position={[projectile.position.x, projectile.position.y, 0]}
+            width={projSize[0]}
+            height={projSize[1]}
+            radius={projectile.radius}
+          />
+        );
+      })}
 
       {!inAlignmentMode && explosions.slice(-maxExplosions).map((explosion) => (
         <group key={explosion.id}>

@@ -6,6 +6,7 @@ import type { LeaderboardEntry } from '../app/leaderboard';
 interface MainMenuProps {
   onStart: () => void;
   onOpenAlignment?: () => void;
+  onOpenClippingDebug?: () => void;
   onOpenOptions: () => void;
   leaderboard: LeaderboardEntry[];
   loadingLeaderboard: boolean;
@@ -15,6 +16,7 @@ interface MainMenuProps {
 export function MainMenu({
   onStart,
   onOpenAlignment,
+  onOpenClippingDebug,
   onOpenOptions,
   leaderboard,
   loadingLeaderboard,
@@ -104,6 +106,16 @@ export function MainMenu({
               className="mt-3 w-full rounded-xl bg-slate-200/95 px-4 py-3 text-sm font-bold uppercase tracking-wide text-slate-900 active:scale-[0.98]"
             >
               Sprite Alignment
+            </button>
+          )}
+
+          {onOpenClippingDebug && (
+            <button
+              type="button"
+              onClick={onOpenClippingDebug}
+              className="mt-3 w-full rounded-xl bg-slate-200/95 px-4 py-3 text-sm font-bold uppercase tracking-wide text-slate-900 active:scale-[0.98]"
+            >
+              Clipping Debug
             </button>
           )}
 

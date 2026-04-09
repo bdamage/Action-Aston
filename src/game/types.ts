@@ -17,6 +17,13 @@ export type EnemyType =
   | "firstBoss"
   | "finalBoss";
 export type PickupType = "health" | "shield" | "ammo" | "boost";
+export type FormationType =
+  | "random"
+  | "V"
+  | "diagonal-left"
+  | "diagonal-right"
+  | "arc"
+  | "pincer";
 
 export interface Vector2 {
   x: number;
@@ -49,6 +56,8 @@ export interface Enemy {
   trackStrength: number;
   fireCooldown: number;
   hitFlash: number;
+  formationOffsetX?: number;
+  formationHoldTimer?: number;
 }
 
 export interface Projectile {
@@ -99,4 +108,5 @@ export interface GameState {
   explosions: Explosion[];
   input: InputState;
   alignment: SpriteAlignmentTuning;
+  lastFormation: FormationType | null;
 }

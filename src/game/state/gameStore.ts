@@ -22,6 +22,7 @@ import type {
 } from "../types";
 
 interface GameStore extends GameState {
+  showHitboxes: boolean;
   startGame: () => void;
   startAlignment: () => void;
   restartGame: () => void;
@@ -32,6 +33,7 @@ interface GameStore extends GameState {
     value: number,
   ) => void;
   resetAlignment: () => void;
+  toggleHitboxes: () => void;
   setMovement: (movement: Vector2) => void;
   setShooting: (shooting: boolean) => void;
   step: (dt: number) => void;
@@ -60,6 +62,7 @@ function createBaseState(): GameState {
     pickups: [],
     explosions: [],
     alignment,
+    lastFormation: null,
     input: {
       movement: {x: 0, y: 0},
       shooting: false,
@@ -85,6 +88,7 @@ function isBossEnemy(enemy: Enemy) {
 
 export const useGameStore = create<GameStore>((set, get) => ({
   ...createBaseState(),
+  showHitboxes: false,
   setMovement: (movement) =>
     set((state) => ({
       input: {
@@ -123,6 +127,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         player: {...state.player, radius: alignment.player.radius},
       };
     }),
+  toggleHitboxes: () => set((state) => ({showHitboxes: !state.showHitboxes})),
   startGame: () =>
     set((state) => {
       if (state.phase === "playing") {
@@ -238,12 +243,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const enemies: Enemy[] = [...state.enemies, ...spawnedEnemies].map(
       (enemy) => {
-        const dx = player.position.x - enemy.position.x;
+        const isHolding =
+          !isBossEnemy(enemy) && (enemy.formationHoldTimer ?? 0) > 0;
+        const targetX = isHolding
+          ? (enemy.formationOffsetX ?? player.position.x)
+          : player.position.x;
+        const trackDx = targetX - enemy.position.x;
+        const effectiveTrack = isHolding
+          ? enemy.trackStrength * 0.5
+          : enemy.trackStrength;
         const maxTrackDelta = isBossEnemy(enemy)
           ? 0.7 * frameDt
           : 1.2 * frameDt;
         const adjustX = clamp(
-          dx * enemy.trackStrength * frameDt,
+          trackDx * effectiveTrack * frameDt,
           -maxTrackDelta,
           maxTrackDelta,
         );
@@ -265,6 +278,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
           },
           fireCooldown,
           hitFlash: Math.max(0, enemy.hitFlash - frameDt),
+          formationHoldTimer: isHolding
+            ? Math.max(0, (enemy.formationHoldTimer ?? 0) - frameDt)
+            : enemy.formationHoldTimer,
         };
       },
     );
@@ -450,6 +466,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       wave: spawnState.wave,
       spawnTimer: spawnState.spawnTimer,
       nextEnemyId: spawnState.nextEnemyId,
+      lastFormation: spawnState.lastFormation,
       nextProjectileId,
       nextPickupId,
       nextExplosionId,

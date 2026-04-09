@@ -3,6 +3,7 @@ import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, use
 import * as THREE from 'three';
 import { MainMenu } from '../ui/MainMenu';
 import { SpriteAlignmentOverlay } from '../ui/SpriteAlignmentOverlay';
+import { ClippingDebugOverlay } from '../ui/ClippingDebugOverlay';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { HUD } from '../ui/HUD';
 import { PauseOverlay } from '../ui/PauseOverlay';
@@ -59,16 +60,6 @@ export function GameScreen() {
   const bossFightActive = useGameStore((state) =>
     state.enemies.some((enemy) => enemy.type === 'firstBoss' || enemy.type === 'finalBoss')
   );
-  const activeBoss = useGameStore(
-    (state) =>
-      state.enemies.find(
-        (enemy) => (enemy.type === 'firstBoss' || enemy.type === 'finalBoss') && enemy.hp > 0
-      ) ?? null
-  );
-  const bossName =
-    activeBoss?.type === 'finalBoss' ? 'Final Boss' : activeBoss?.type === 'firstBoss' ? 'Boss' : undefined;
-  const bossHealth = activeBoss?.hp;
-  const bossMaxHealth = activeBoss?.maxHp;
   const score = useGameStore((state) => state.score);
   const wave = useGameStore((state) => state.wave);
   const player = useGameStore((state) => state.player);
@@ -76,8 +67,11 @@ export function GameScreen() {
   const startAlignment = useGameStore((state) => state.startAlignment);
   const restartGame = useGameStore((state) => state.restartGame);
   const setPhase = useGameStore((state) => state.setPhase);
+  const showHitboxes = useGameStore((state) => state.showHitboxes);
+  const toggleHitboxes = useGameStore((state) => state.toggleHitboxes);
   const setMovement = useGameStore((state) => state.setMovement);
   const setShooting = useGameStore((state) => state.setShooting);
+  const lastFormation = useGameStore((state) => state.lastFormation);
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
@@ -259,6 +253,7 @@ export function GameScreen() {
         <MainMenu
           onStart={handleStart}
           onOpenAlignment={isDev ? handleStartAlignment : undefined}
+          onOpenClippingDebug={isDev ? toggleHitboxes : undefined}
           onOpenOptions={() => setOptionsOpen(true)}
           leaderboard={leaderboard}
           loadingLeaderboard={loadingLeaderboard}
@@ -284,6 +279,10 @@ export function GameScreen() {
         <SpriteAlignmentOverlay onBack={() => setPhase('menu')} />
       )}
 
+      {isDev && showHitboxes && (
+        <ClippingDebugOverlay onClose={toggleHitboxes} />
+      )}
+
       {phase !== 'menu' && phase !== 'alignment' && (
         <HUD
           score={score}
@@ -292,9 +291,7 @@ export function GameScreen() {
           shield={player.shield}
           ammo={player.ammo}
           boost={player.boostTimer}
-          bossName={bossName}
-          bossHealth={bossHealth}
-          bossMaxHealth={bossMaxHealth}
+          lastFormation={lastFormation}
           onPause={() => setPhase(phase === 'paused' ? 'playing' : 'paused')}
         />
       )}
