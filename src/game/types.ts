@@ -116,6 +116,7 @@ export interface GameState {
   nextPickupId: number;
   nextExplosionId: number;
   nextCoinId: number;
+  screenShake: number;
   player: Player;
   enemies: Enemy[];
   projectiles: Projectile[];

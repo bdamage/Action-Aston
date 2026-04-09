@@ -14,8 +14,11 @@ interface HUDProps {
   coins: number;
   wave: number;
   health: number;
+  maxHealth: number;
   shield: number;
+  maxShield: number;
   ammo: number;
+  maxAmmo: number;
   boost: number;
   bossName?: string;
   bossHealth?: number;
@@ -51,7 +54,7 @@ function Meter({
   );
 }
 
-export function HUD({ score, coins, wave, health, shield, ammo, boost, bossName, bossHealth, bossMaxHealth, lastFormation, onPause }: HUDProps) {
+export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, ammo, maxAmmo, boost, bossName, bossHealth, bossMaxHealth, lastFormation, onPause }: HUDProps) {
   const showBossBar =
     typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && bossMaxHealth > 0;
   const bossRatio =
@@ -111,9 +114,9 @@ export function HUD({ score, coins, wave, health, shield, ammo, boost, bossName,
       </div>
 
       <div className="pointer-events-auto absolute left-3 top-[max(0.75rem,env(safe-area-inset-top))] w-[min(6.4rem,42vw)] space-y-1 rounded-lg bg-black/45 p-1 backdrop-blur">
-        <Meter label="Health" value={health} max={100} color="#59f6a6" compact />
-        <Meter label="Shield" value={shield} max={60} color="#4c8fff" compact />
-        <Meter label="Ammo" value={ammo} max={220} color="#fdd065" compact />
+        <Meter label="Health" value={health} max={maxHealth} color="#59f6a6" compact />
+        <Meter label="Shield" value={shield} max={maxShield} color="#4c8fff" compact />
+        <Meter label="Ammo" value={ammo} max={maxAmmo} color="#fdd065" compact />
       </div>
 
       {showBossBar && (

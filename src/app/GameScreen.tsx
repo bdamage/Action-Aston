@@ -81,6 +81,7 @@ export function GameScreen() {
   const setMovement = useGameStore((state) => state.setMovement);
   const setShooting = useGameStore((state) => state.setShooting);
   const lastFormation = useGameStore((state) => state.lastFormation);
+  const screenShake = useGameStore((state) => state.screenShake);
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
@@ -231,7 +232,12 @@ export function GameScreen() {
   }, [startAlignment]);
 
   return (
-    <main className="relative h-[100dvh] w-screen overflow-hidden bg-black">
+    <main
+      className="relative h-[100dvh] w-screen overflow-hidden bg-black"
+      style={screenShake > 0 ? {
+        transform: `translate(${Math.sin(Date.now() * 0.031) * screenShake * 18}px, ${Math.cos(Date.now() * 0.041) * screenShake * 11}px)`,
+      } : undefined}
+    >
       <GameErrorBoundary>
         <Canvas
           orthographic
@@ -304,8 +310,11 @@ export function GameScreen() {
           coins={coinsCollected}
           wave={wave}
           health={player.health}
+          maxHealth={player.maxHealth}
           shield={player.shield}
+          maxShield={player.maxShield}
           ammo={player.ammo}
+          maxAmmo={player.maxAmmo}
           boost={player.boostTimer}
           bossName={activeBoss ? BOSS_NAMES[activeBoss.type] : undefined}
           bossHealth={activeBoss?.hp}

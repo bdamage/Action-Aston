@@ -4,6 +4,8 @@ import {
   useGarageStore,
   WEAPON_TIERS,
   SHIELD_TIERS,
+  HEALTH_TIERS,
+  AMMO_TIERS,
   BOOST_TIERS,
   SKIN_OPTIONS,
 } from '../game/state/garageStore';
@@ -95,12 +97,16 @@ export function GarageOverlay({ onClose }: GarageOverlayProps) {
 
   const weaponLevel     = useGarageStore((state) => state.weaponLevel);
   const shieldLevel     = useGarageStore((state) => state.shieldLevel);
+  const healthLevel     = useGarageStore((state) => state.healthLevel);
+  const ammoLevel       = useGarageStore((state) => state.ammoLevel);
   const boostLevel      = useGarageStore((state) => state.boostLevel);
   const activeSkinIndex = useGarageStore((state) => state.activeSkinIndex);
   const purchasedSkins  = useGarageStore((state) => state.purchasedSkins);
 
   const upgradeWeapon = useGarageStore((state) => state.upgradeWeapon);
   const upgradeShield = useGarageStore((state) => state.upgradeShield);
+  const upgradeHealth = useGarageStore((state) => state.upgradeHealth);
+  const upgradeAmmo   = useGarageStore((state) => state.upgradeAmmo);
   const upgradeBoost  = useGarageStore((state) => state.upgradeBoost);
   const buySkin       = useGarageStore((state) => state.buySkin);
   const setActiveSkin = useGarageStore((state) => state.setActiveSkin);
@@ -190,6 +196,22 @@ export function GarageOverlay({ onClose }: GarageOverlayProps) {
                 tiers={SHIELD_TIERS}
                 coins={totalCoins}
                 onUpgrade={() => handleUpgrade(upgradeShield, 'Shields upgraded!')}
+              />
+              <UpgradeCard
+                label="Health"
+                icon="❤️"
+                currentLevel={healthLevel}
+                tiers={HEALTH_TIERS}
+                coins={totalCoins}
+                onUpgrade={() => handleUpgrade(upgradeHealth, 'Health upgraded!')}
+              />
+              <UpgradeCard
+                label="Ammo"
+                icon="🔋"
+                currentLevel={ammoLevel}
+                tiers={AMMO_TIERS}
+                coins={totalCoins}
+                onUpgrade={() => handleUpgrade(upgradeAmmo, 'Ammo upgraded!')}
               />
               <UpgradeCard
                 label="Boost"
