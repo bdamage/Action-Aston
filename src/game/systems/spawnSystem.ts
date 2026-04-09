@@ -259,7 +259,7 @@ function spawnBoss(state: GameState, type: EnemyType): Enemy {
 
 export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
   if (state.enemies.length > 0) {
-    state.spawnTimer = Math.max(state.spawnTimer, 0.85);
+    state.spawnTimer = Math.max(state.spawnTimer, 1.1);
     return [];
   }
 
@@ -337,7 +337,7 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
   }
 
   state.wave = nextWave;
-  state.spawnTimer = Math.max(0.65, 1.55 - state.difficulty * 0.05);
+  state.spawnTimer = Math.max(1.05, 2.2 - state.difficulty * 0.045);
   state.lastFormation = formation;
   return spawned;
 }
