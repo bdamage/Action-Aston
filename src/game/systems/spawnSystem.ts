@@ -6,6 +6,7 @@ const LANE_COUNT = 9;
 const FIRST_BOSS_WAVE = 10;
 const THIRD_BOSS_WAVE = 25;
 const FINAL_BOSS_WAVE = 20;
+const ENEMY_HEALTH_MULTIPLIER = 0.8;
 export const BOSS_WAVES = [
   FIRST_BOSS_WAVE,
   FINAL_BOSS_WAVE,
@@ -245,7 +246,9 @@ function spawnBoss(state: GameState, type: EnemyType): Enemy {
   else if (isThird) baseHp = 680;
   else baseHp = 520;
   const diffMul = isFinal ? 70 : isThird ? 58 : 48;
-  const hp = Math.floor(baseHp + state.difficulty * diffMul);
+  const hp = Math.floor(
+    (baseHp + state.difficulty * diffMul) * ENEMY_HEALTH_MULTIPLIER,
+  );
 
   return {
     id: state.nextEnemyId++,
@@ -316,7 +319,9 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
   for (let i = 0; i < enemyCount; i += 1) {
     const pos = positions[i];
     const type = ENEMY_TYPES[randInt(0, ENEMY_TYPES.length - 1)];
-    const hp = Math.floor((22 + state.difficulty * 6.5) * pattern.hpScale);
+    const hp = Math.floor(
+      (22 + state.difficulty * 6.5) * pattern.hpScale * ENEMY_HEALTH_MULTIPLIER,
+    );
 
     spawned.push({
       id: state.nextEnemyId++,

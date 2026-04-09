@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormationType } from '../game/types';
+import { HALF_HEIGHT } from '../game/constants';
 
 const FORMATION_LABELS: Partial<Record<FormationType, string>> = {
   V: 'V-FORMATION',
@@ -23,8 +24,14 @@ interface HUDProps {
   bossName?: string;
   bossHealth?: number;
   bossMaxHealth?: number;
+  bossWorldX?: number;
+  bossWorldY?: number;
   lastFormation?: FormationType | null;
   onPause: () => void;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
 }
 
 function Meter({
@@ -54,7 +61,7 @@ function Meter({
   );
 }
 
-export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, ammo, maxAmmo, boost, bossName, bossHealth, bossMaxHealth, lastFormation, onPause }: HUDProps) {
+export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, ammo, maxAmmo, boost, bossName, bossHealth, bossMaxHealth, bossWorldX, bossWorldY, lastFormation, onPause }: HUDProps) {
   const showBossBar =
     typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && bossMaxHealth > 0;
   const bossRatio =
@@ -62,9 +69,22 @@ export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, 
       ? Math.max(0, Math.min(1, bossHealth / bossMaxHealth))
       : 0;
 
+  const [viewportSize, setViewportSize] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1280,
+    height: typeof window !== 'undefined' ? window.innerHeight : 720,
+  }));
+
   const [announcementText, setAnnouncementText] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const onResize = () => {
+      setViewportSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     if (!lastFormation) return;
@@ -79,6 +99,25 @@ export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, 
       if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
     };
   }, [lastFormation]);
+
+  const trackedBossBarStyle = (() => {
+    if (!showBossBar || typeof bossWorldX !== 'number' || typeof bossWorldY !== 'number') {
+      return null;
+    }
+
+    const aspect = viewportSize.height > 0 ? viewportSize.width / viewportSize.height : 1;
+    const halfWidth = HALF_HEIGHT * aspect;
+    const xPct = ((bossWorldX + halfWidth) / (halfWidth * 2)) * 100;
+    const yPct = ((HALF_HEIGHT - bossWorldY) / (HALF_HEIGHT * 2)) * 100;
+    const topPct = clamp(yPct - 7, 8, 66);
+    const edgeFade = clamp((topPct - 8) / 7, 0.45, 1);
+
+    return {
+      left: `${clamp(xPct, 9, 91)}%`,
+      top: `${topPct}%`,
+      opacity: edgeFade,
+    };
+  })();
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
@@ -119,19 +158,14 @@ export function HUD({ score, coins, wave, health, maxHealth, shield, maxShield, 
         <Meter label="Ammo" value={ammo} max={maxAmmo} color="#fdd065" compact />
       </div>
 
-      {showBossBar && (
-        <div className="pointer-events-none absolute left-1/2 top-[max(4.25rem,calc(env(safe-area-inset-top)+3.75rem))] z-30 w-[min(20rem,72vw)] -translate-x-1/2 rounded-lg border border-rose-300/55 bg-black/65 px-3 py-2 shadow-[0_10px_24px_rgba(255,90,120,0.18)] backdrop-blur">
-          <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-rose-100">
-            <span>{bossName ?? 'Boss'}</span>
-            <span>
-              {Math.ceil(Math.max(0, bossHealth))} / {Math.ceil(Math.max(0, bossMaxHealth))} HP
-            </span>
-          </div>
-          <div className="mt-1 h-2.5 w-full overflow-hidden rounded bg-black/50">
-            <div
-              className="h-full rounded bg-rose-400"
-              style={{ width: `${bossRatio * 100}%` }}
-            />
+      {showBossBar && trackedBossBarStyle && (
+        <div
+          title={bossName ?? 'Boss'}
+          className="pointer-events-none absolute z-30 w-[min(8.5rem,36vw)] -translate-x-1/2 rounded-md border border-rose-300/45 bg-black/55 px-1.5 py-1 shadow-[0_6px_12px_rgba(255,90,120,0.12)] backdrop-blur"
+          style={trackedBossBarStyle}
+        >
+          <div className="h-1.5 w-full overflow-hidden rounded bg-black/55">
+            <div className="h-full rounded bg-rose-400" style={{ width: `${bossRatio * 100}%` }} />
           </div>
         </div>
       )}

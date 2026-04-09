@@ -2,9 +2,9 @@ import type {Pickup, PickupType} from "../types";
 
 function randomPickupType(): PickupType {
   const roll = Math.random();
-  if (roll < 0.2) return "health";
-  if (roll < 0.38) return "shield";
-  if (roll < 0.85) return "ammo";
+  if (roll < 0.26) return "health";
+  if (roll < 0.5) return "shield";
+  if (roll < 0.84) return "ammo";
   return "boost";
 }
 
@@ -20,7 +20,7 @@ export function createPickup(
     type,
     position: {x, y},
     radius,
-    value: type === "ammo" ? 28 : type === "boost" ? 6 : 22,
+    value: type === "ammo" ? 14 : type === "boost" ? 5 : 22,
   };
 }
 

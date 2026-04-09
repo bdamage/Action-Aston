@@ -121,7 +121,8 @@ const SIMULATION_SPEED = 0.7;
 const HIT_FLASH_DURATION = 0.16;
 const BOSS_HOVER_DOWN_SHIFT = HALF_HEIGHT * 0.2;
 const FIRST_BOSS_HOVER_Y = HALF_HEIGHT - 1.55 - BOSS_HOVER_DOWN_SHIFT;
-const THIRD_BOSS_HOVER_Y = HALF_HEIGHT - 1.8 - BOSS_HOVER_DOWN_SHIFT;
+// Third boss sits lower so the encounter feels more aggressive and readable.
+const THIRD_BOSS_HOVER_Y = HALF_HEIGHT - 3.1 - BOSS_HOVER_DOWN_SHIFT;
 const FINAL_BOSS_HOVER_Y = HALF_HEIGHT - 2.05 - BOSS_HOVER_DOWN_SHIFT;
 
 function isBossEnemy(enemy: Enemy) {
@@ -274,6 +275,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const nextElapsed = state.elapsed + frameDt;
     const nextDifficulty = 1 + nextElapsed * 0.05;
+
+    let screenShake = Math.max(0, state.screenShake - frameDt);
 
     const player = {
       ...state.player,
@@ -537,6 +540,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         continue;
       enemy.hp = 0;
       player.hitFlash = HIT_FLASH_DURATION;
+      screenShake = HIT_FLASH_DURATION;
       if (player.shield > 0) {
         player.shield = Math.max(0, player.shield - 22);
       } else {
@@ -565,6 +569,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const hitDamage = projectile.damage;
       projectile.damage = 0;
       player.hitFlash = HIT_FLASH_DURATION;
+      screenShake = HIT_FLASH_DURATION;
       if (player.shield > 0) {
         player.shield = Math.max(0, player.shield - hitDamage);
       } else {
@@ -614,7 +619,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let pickupDropTimer = state.pickupDropTimer - frameDt;
     if (pickupDropTimer <= 0) {
       const x = (Math.random() - 0.5) * (HALF_WIDTH * 1.6);
-      const timedType: PickupType = Math.random() < 0.75 ? "ammo" : "health";
+      const timedType: PickupType = Math.random() < 0.35 ? "ammo" : "health";
       pickups.push(
         createPickup(
           nextPickupId++,
@@ -624,30 +629,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
           state.alignment.pickup.radius,
         ),
       );
-      pickupDropTimer = 9 + Math.random() * 6;
+      pickupDropTimer = 14 + Math.random() * 8;
     }
 
     // ── Guaranteed drops when wave is cleared ─────────────────────────────────
     const waveJustCleared =
       state.enemies.length > 0 && aliveEnemies.length === 0;
     if (waveJustCleared) {
-      const dropCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
-      const xSpread = HALF_WIDTH * 0.7;
-      for (let i = 0; i < dropCount; i++) {
-        const xPos =
-          dropCount > 1 ? -xSpread + (i / (dropCount - 1)) * xSpread * 2 : 0;
-        const clearType: PickupType =
-          i === 0 || Math.random() < 0.6 ? "ammo" : "health";
-        pickups.push(
-          createPickup(
-            nextPickupId++,
-            xPos + (Math.random() - 0.5) * 0.5,
-            HALF_HEIGHT * 0.2,
-            clearType,
-            state.alignment.pickup.radius,
-          ),
-        );
-      }
+      const clearType: PickupType = Math.random() < 0.4 ? "ammo" : "health";
+      pickups.push(
+        createPickup(
+          nextPickupId++,
+          (Math.random() - 0.5) * 1.0,
+          HALF_HEIGHT * 0.2,
+          clearType,
+          state.alignment.pickup.radius,
+        ),
+      );
     }
 
     const phase: GamePhase = player.health <= 0 ? "gameover" : "playing";
@@ -674,6 +672,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       nextPickupId,
       nextExplosionId,
       nextCoinId,
+      screenShake,
       player,
       enemies: aliveEnemies.filter((enemy) => enemy.hp > 0),
       projectiles: activeProjectiles.filter(

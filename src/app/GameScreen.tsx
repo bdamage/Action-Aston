@@ -319,6 +319,8 @@ export function GameScreen() {
           bossName={activeBoss ? BOSS_NAMES[activeBoss.type] : undefined}
           bossHealth={activeBoss?.hp}
           bossMaxHealth={activeBoss?.maxHp}
+          bossWorldX={activeBoss?.position.x}
+          bossWorldY={activeBoss?.position.y}
           lastFormation={lastFormation}
           onPause={() => setPhase(phase === 'paused' ? 'playing' : 'paused')}
         />
