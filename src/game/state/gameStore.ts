@@ -2,7 +2,7 @@ import {create} from "zustand";
 import {HALF_HEIGHT, HALF_WIDTH, PLAYER_BASE} from "../constants";
 import {cloneAlignmentTuning} from "../renderTuning";
 import {clamp, intersects} from "../systems/collisionSystem";
-import {maybeCreatePickup} from "../systems/pickupSystem";
+import {createPickup, maybeCreatePickup} from "../systems/pickupSystem";
 import {
   buildEnemySpatialIndex,
   getNearbyEnemies,
@@ -18,6 +18,7 @@ import type {
   GamePhase,
   GameState,
   Pickup,
+  PickupType,
   Projectile,
   Vector2,
 } from "../types";
@@ -50,6 +51,7 @@ function createBaseState(): GameState {
     difficulty: 1,
     wave: 0,
     spawnTimer: 0.45,
+    pickupDropTimer: 10 + Math.random() * 5,
     nextEnemyId: 1,
     nextProjectileId: 1,
     nextPickupId: 1,
@@ -218,6 +220,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let nextProjectileId = state.nextProjectileId;
     let nextPickupId = state.nextPickupId;
     let nextExplosionId = state.nextExplosionId;
+    let nextCoinId = state.nextCoinId;
 
     if (state.input.shooting && player.shootCooldown <= 0 && player.ammo > 0) {
       const spread = player.boostTimer > 0 ? [-0.14, 0, 0.14] : [0];
@@ -325,7 +328,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }))
       .filter((pickup) => pickup.position.y > -HALF_HEIGHT - 1);
 
+    const coins: Coin[] = state.coins
+      .map((coin) => ({
+        ...coin,
+        position: {
+          x: coin.position.x + coin.vx * frameDt,
+          y: coin.position.y - frameDt * 1.2,
+        },
+      }))
+      .filter((coin) => coin.value > 0 && coin.position.y > -HALF_HEIGHT - 1);
+
     let score = state.score;
+    let coinsCollected = state.coinsCollected;
     const enemyIndex = buildEnemySpatialIndex(enemies, 1.25);
 
     for (const projectile of projectiles) {
@@ -372,6 +386,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
           );
           if (maybePickup) {
             pickups.push(maybePickup);
+          }
+
+          if (isBossEnemy(enemy)) {
+            const BOSS_COIN_COUNT = 15;
+            for (let i = 0; i < BOSS_COIN_COUNT; i++) {
+              const angle = (i / BOSS_COIN_COUNT) * Math.PI * 2;
+              const spreadR = 0.5 + Math.random() * 0.5;
+              coins.push({
+                id: nextCoinId++,
+                position: {
+                  x: enemy.position.x + Math.cos(angle) * spreadR,
+                  y: enemy.position.y + Math.sin(angle) * spreadR * 0.5,
+                },
+                radius: 0.28,
+                vx: Math.cos(angle) * (0.8 + Math.random() * 0.6),
+                value: 100,
+              });
+            }
+          } else {
+            coins.push({
+              id: nextCoinId++,
+              position: {x: enemy.position.x, y: enemy.position.y},
+              radius: 0.28,
+              vx: (Math.random() - 0.5) * 1.2,
+              value: 100,
+            });
           }
 
           soundManager.playExplosion();
@@ -467,26 +507,81 @@ export const useGameStore = create<GameStore>((set, get) => ({
       soundManager.playPickup();
     }
 
+    for (const coin of coins) {
+      if (coin.value <= 0) continue;
+      if (
+        !intersects(coin.position, coin.radius, player.position, player.radius)
+      )
+        continue;
+      coinsCollected += coin.value;
+      coin.value = 0;
+      soundManager.playPickup();
+    }
+
+    // ── Timed random ammo drops ───────────────────────────────────────────────
+    let pickupDropTimer = state.pickupDropTimer - frameDt;
+    if (pickupDropTimer <= 0) {
+      const x = (Math.random() - 0.5) * (HALF_WIDTH * 1.6);
+      const timedType: PickupType = Math.random() < 0.75 ? "ammo" : "health";
+      pickups.push(
+        createPickup(
+          nextPickupId++,
+          x,
+          HALF_HEIGHT * 0.5,
+          timedType,
+          state.alignment.pickup.radius,
+        ),
+      );
+      pickupDropTimer = 9 + Math.random() * 6;
+    }
+
+    // ── Guaranteed drops when wave is cleared ─────────────────────────────────
+    const waveJustCleared =
+      state.enemies.length > 0 && aliveEnemies.length === 0;
+    if (waveJustCleared) {
+      const dropCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
+      const xSpread = HALF_WIDTH * 0.7;
+      for (let i = 0; i < dropCount; i++) {
+        const xPos =
+          dropCount > 1 ? -xSpread + (i / (dropCount - 1)) * xSpread * 2 : 0;
+        const clearType: PickupType =
+          i === 0 || Math.random() < 0.6 ? "ammo" : "health";
+        pickups.push(
+          createPickup(
+            nextPickupId++,
+            xPos + (Math.random() - 0.5) * 0.5,
+            HALF_HEIGHT * 0.2,
+            clearType,
+            state.alignment.pickup.radius,
+          ),
+        );
+      }
+    }
+
     const phase: GamePhase = player.health <= 0 ? "gameover" : "playing";
 
     set({
       phase,
       score,
+      coinsCollected,
       elapsed: nextElapsed,
       difficulty: nextDifficulty,
       wave: spawnState.wave,
       spawnTimer: spawnState.spawnTimer,
+      pickupDropTimer,
       nextEnemyId: spawnState.nextEnemyId,
       lastFormation: spawnState.lastFormation,
       nextProjectileId,
       nextPickupId,
       nextExplosionId,
+      nextCoinId,
       player,
       enemies: aliveEnemies.filter((enemy) => enemy.hp > 0),
       projectiles: activeProjectiles.filter(
         (projectile) => projectile.damage > 0,
       ),
       pickups: pickups.filter((pickup) => pickup.value > 0),
+      coins: coins.filter((coin) => coin.value > 0),
       explosions: explosions.slice(-70),
     });
   },

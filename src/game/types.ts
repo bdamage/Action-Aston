@@ -107,6 +107,7 @@ export interface GameState {
   difficulty: number;
   wave: number;
   spawnTimer: number;
+  pickupDropTimer: number;
   nextEnemyId: number;
   nextProjectileId: number;
   nextPickupId: number;

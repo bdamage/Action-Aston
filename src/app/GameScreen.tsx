@@ -68,6 +68,7 @@ export function GameScreen() {
   );
   const bossFightActive = activeBoss !== null;
   const score = useGameStore((state) => state.score);
+  const coinsCollected = useGameStore((state) => state.coinsCollected);
   const wave = useGameStore((state) => state.wave);
   const player = useGameStore((state) => state.player);
   const startGame = useGameStore((state) => state.startGame);
@@ -293,6 +294,7 @@ export function GameScreen() {
       {phase !== 'menu' && phase !== 'alignment' && (
         <HUD
           score={score}
+          coins={coinsCollected}
           wave={wave}
           health={player.health}
           shield={player.shield}

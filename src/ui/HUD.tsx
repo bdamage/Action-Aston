@@ -11,6 +11,7 @@ const FORMATION_LABELS: Partial<Record<FormationType, string>> = {
 
 interface HUDProps {
   score: number;
+  coins: number;
   wave: number;
   health: number;
   shield: number;
@@ -50,7 +51,7 @@ function Meter({
   );
 }
 
-export function HUD({ score, wave, health, shield, ammo, boost, bossName, bossHealth, bossMaxHealth, lastFormation, onPause }: HUDProps) {
+export function HUD({ score, coins, wave, health, shield, ammo, boost, bossName, bossHealth, bossMaxHealth, lastFormation, onPause }: HUDProps) {
   const showBossBar =
     typeof bossHealth === 'number' && typeof bossMaxHealth === 'number' && bossMaxHealth > 0;
   const bossRatio =
@@ -94,6 +95,10 @@ export function HUD({ score, wave, health, shield, ammo, boost, bossName, bossHe
         <div>
           <div className="text-[10px] uppercase tracking-widest text-slate-400">Score</div>
           <div className="text-3xl font-bold leading-none text-hud">{score}</div>
+        </div>
+        <div className="mt-1.5 flex items-center justify-end gap-1">
+          <span className="text-[11px] font-bold text-yellow-300">⬡</span>
+          <span className="text-sm font-bold leading-none text-yellow-300">{coins}</span>
         </div>
         <div className="mt-1 text-sm text-cyan-200">Wave {wave}</div>
         <button

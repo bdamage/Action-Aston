@@ -7,6 +7,7 @@ import { atlas, type SpriteKey } from '../../assets/assetConfig';
 import firstBossUrl from '../../assets/first_boss.png';
 import finalBossUrl from '../../assets/final_boss.png';
 import thirdBossUrl from '../../assets/boss03.png';
+import coinUrl from '../../assets/coin.png';
 import { getDpiSpriteScaleMultiplier, SPRITE_SCALE } from '../renderTuning';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameStore } from '../state/gameStore';
@@ -83,7 +84,7 @@ export function RenderScene() {
   );
 
   const baseTexture = useLoader(THREE.TextureLoader, atlas.url);
-  const [firstBossTexture, finalBossTexture, thirdBossTexture] = useLoader(THREE.TextureLoader, [firstBossUrl, finalBossUrl, thirdBossUrl]);
+  const [firstBossTexture, finalBossTexture, thirdBossTexture, coinTexture] = useLoader(THREE.TextureLoader, [firstBossUrl, finalBossUrl, thirdBossUrl, coinUrl]);
 
   const bossTextures = useMemo(() => {
     const output = {
@@ -92,8 +93,7 @@ export function RenderScene() {
       finalBoss: finalBossTexture
     };
 
-    for (const texture of Object.values(output)) {
-      texture.wrapS = THREE.ClampToEdgeWrapping;
+    for (const texture of Object.values(output)) {      texture.wrapS = THREE.ClampToEdgeWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       texture.magFilter = THREE.LinearFilter;
       texture.minFilter = THREE.LinearFilter;
@@ -103,6 +103,16 @@ export function RenderScene() {
 
     return output;
   }, [firstBossTexture, finalBossTexture]);
+
+  const preparedCoinTexture = useMemo(() => {
+    coinTexture.wrapS = THREE.ClampToEdgeWrapping;
+    coinTexture.wrapT = THREE.ClampToEdgeWrapping;
+    coinTexture.magFilter = THREE.LinearFilter;
+    coinTexture.minFilter = THREE.LinearFilter;
+    coinTexture.generateMipmaps = false;
+    coinTexture.needsUpdate = true;
+    return coinTexture;
+  }, [coinTexture]);
 
   const textures = useMemo(() => {
     const output = {} as Record<SpriteKey, THREE.Texture>;
@@ -155,6 +165,7 @@ export function RenderScene() {
   const enemies = useGameStore((state) => state.enemies);
   const projectiles = useGameStore((state) => state.projectiles);
   const pickups = useGameStore((state) => state.pickups);
+  const coins = useGameStore((state) => state.coins);
   const explosions = useGameStore((state) => state.explosions);
 
   const playerSize = scaledSizeFromFrame('player', alignment.player.h, spriteScaleMultiplier);
@@ -355,6 +366,29 @@ export function RenderScene() {
             height={pickupSize[1]}
             radius={pickup.radius}
           />
+        );
+      })}
+
+      {!inAlignmentMode && coins.map((coin) => {
+        const coinSize = scaledSizeFromTexture(preparedCoinTexture, alignment.pickup.h, spriteScaleMultiplier);
+        return (
+          <group key={coin.id}>
+            <AtlasPlane
+              texture={preparedCoinTexture}
+              position={[coin.position.x, coin.position.y, 0.01]}
+              size={coinSize}
+            />
+            <mesh position={[coin.position.x, coin.position.y, 0]}>
+              <circleGeometry args={[coinSize[0] * 0.55, 16]} />
+              <meshBasicMaterial
+                color="#ffd700"
+                transparent
+                opacity={0.28}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
+          </group>
         );
       })}
 
