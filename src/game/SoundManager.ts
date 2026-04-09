@@ -43,7 +43,7 @@ function createSound(src: string[], volume: number): Howl | null {
 class SoundManager {
   private musicEnabled = true;
   private sfxEnabled = true;
-  private musicVolume = 1;
+  private musicVolume = 0.7;
   private sfxVolume = 1;
   private audioUnlocked = false;
   private activeMusicTrack: MusicTrack | null = null;
@@ -212,10 +212,16 @@ class SoundManager {
 
     osc.type = wave;
     osc.frequency.setValueAtTime(startHz, now);
-    osc.frequency.exponentialRampToValueAtTime(Math.max(16, endHz), now + duration);
+    osc.frequency.exponentialRampToValueAtTime(
+      Math.max(16, endHz),
+      now + duration,
+    );
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, peakGain), now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(
+      Math.max(0.0002, peakGain),
+      now + 0.012,
+    );
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
     osc.connect(gain);
@@ -255,7 +261,10 @@ class SoundManager {
     highpass.frequency.setValueAtTime(45, now);
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, peakGain), now + 0.018);
+    gain.gain.exponentialRampToValueAtTime(
+      Math.max(0.0002, peakGain),
+      now + 0.018,
+    );
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
     source.connect(lowpass);
@@ -267,8 +276,12 @@ class SoundManager {
   }
 
   private playShootSynth() {
-    this.playOscillator("sawtooth", 1400, 360, 0.085, 0.07);
-    this.playOscillator("square", 860, 280, 0.06, 0.03);
+    // Main laser body: high-frequency zap sweeping down over a longer tail
+    this.playOscillator("sawtooth", 2600, 160, 0.26, 0.14);
+    // Mid harmonic crunch layer
+    this.playOscillator("square", 1100, 140, 0.22, 0.08);
+    // Sub punch to give it weight
+    this.playOscillator("sine", 380, 48, 0.2, 0.055);
   }
 
   private playExplosionSynth() {
