@@ -3,6 +3,8 @@ import type {Enemy, EnemyType, GameState} from "../types";
 
 const ENEMY_TYPES: EnemyType[] = ["enemy01", "enemy02", "enemy03"];
 const LANE_COUNT = 9;
+const FIRST_BOSS_WAVE = 10;
+const FINAL_BOSS_WAVE = 8;
 
 interface WavePattern {
   lanes: number[];
@@ -114,13 +116,13 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
 
   const nextWave = state.wave + 1;
 
-  if (nextWave === 6) {
+  if (nextWave === FIRST_BOSS_WAVE) {
     state.wave = nextWave;
     state.spawnTimer = Math.max(1.2, 2 - state.difficulty * 0.03);
     return [spawnBoss(state, "firstBoss")];
   }
 
-  if (nextWave === 7) {
+  if (nextWave === FINAL_BOSS_WAVE) {
     state.wave = nextWave;
     state.spawnTimer = Math.max(1.35, 2.2 - state.difficulty * 0.03);
     return [spawnBoss(state, "finalBoss")];

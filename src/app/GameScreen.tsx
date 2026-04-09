@@ -59,9 +59,6 @@ export function GameScreen() {
   const bossFightActive = useGameStore((state) =>
     state.enemies.some((enemy) => enemy.type === 'firstBoss' || enemy.type === 'finalBoss')
   );
-  const activeBoss = useGameStore((state) =>
-    state.enemies.find((enemy) => enemy.type === 'firstBoss' || enemy.type === 'finalBoss')
-  );
   const score = useGameStore((state) => state.score);
   const wave = useGameStore((state) => state.wave);
   const player = useGameStore((state) => state.player);
@@ -261,15 +258,6 @@ export function GameScreen() {
           shield={player.shield}
           ammo={player.ammo}
           boost={player.boostTimer}
-          bossName={
-            activeBoss
-              ? activeBoss.type === 'firstBoss'
-                ? 'First Boss'
-                : 'Final Boss'
-              : undefined
-          }
-          bossHealth={activeBoss?.hp}
-          bossMaxHealth={activeBoss?.maxHp}
           onPause={() => setPhase(phase === 'paused' ? 'playing' : 'paused')}
         />
       )}
