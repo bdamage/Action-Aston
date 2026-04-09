@@ -51,10 +51,14 @@ function ResponsiveOrthoCamera() {
 
 export function GameScreen() {
   useInputBindings();
+  const isDev = import.meta.env.DEV;
 
   const initialAudioSettings = useMemo(() => soundManager.getSettings(), []);
 
   const phase = useGameStore((state) => state.phase);
+  const bossFightActive = useGameStore((state) =>
+    state.enemies.some((enemy) => enemy.type === 'firstBoss' || enemy.type === 'finalBoss')
+  );
   const score = useGameStore((state) => state.score);
   const wave = useGameStore((state) => state.wave);
   const player = useGameStore((state) => state.player);
@@ -84,6 +88,12 @@ export function GameScreen() {
     []
   );
   const canvasDpr = showTouchControls ? ([1, 1.2] as [number, number]) : ([1, 1.5] as [number, number]);
+
+  useEffect(() => {
+    if (!isDev && phase === 'alignment') {
+      setPhase('menu');
+    }
+  }, [isDev, phase, setPhase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,7 +137,7 @@ export function GameScreen() {
 
   useEffect(() => {
     if (phase === 'playing' || phase === 'paused') {
-      soundManager.playMusic('gameplay');
+      soundManager.playMusic(bossFightActive ? 'boss' : 'gameplay');
       return;
     }
 
@@ -137,7 +147,7 @@ export function GameScreen() {
     }
 
     soundManager.playMusic('title');
-  }, [phase]);
+  }, [bossFightActive, phase]);
 
   useEffect(() => {
     soundManager.setMusicEnabled(musicEnabled);
@@ -214,7 +224,7 @@ export function GameScreen() {
       {phase === 'menu' && (
         <MainMenu
           onStart={startGame}
-          onOpenAlignment={startAlignment}
+          onOpenAlignment={isDev ? startAlignment : undefined}
           onOpenOptions={() => setOptionsOpen(true)}
           leaderboard={leaderboard}
           loadingLeaderboard={loadingLeaderboard}
@@ -236,7 +246,7 @@ export function GameScreen() {
         />
       )}
 
-      {phase === 'alignment' && (
+      {isDev && phase === 'alignment' && (
         <SpriteAlignmentOverlay onBack={() => setPhase('menu')} />
       )}
 

@@ -1,10 +1,11 @@
 import menuBackgroundUrl from '../assets/menu_background.png';
 import mobileLogoUrl from '../assets/mobile_logo.png';
+import heroesUrl from '../assets/heros.png';
 import type { LeaderboardEntry } from '../app/leaderboard';
 
 interface MainMenuProps {
   onStart: () => void;
-  onOpenAlignment: () => void;
+  onOpenAlignment?: () => void;
   onOpenOptions: () => void;
   leaderboard: LeaderboardEntry[];
   loadingLeaderboard: boolean;
@@ -29,6 +30,28 @@ export function MainMenu({
       />
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/50" />
+
+      <div className="menu-hero-side menu-hero-side-left" aria-hidden="true">
+        <div className="menu-hero-upper-crop">
+          <img
+            src={heroesUrl}
+            alt=""
+            className="menu-hero-image menu-hero-image-left"
+            draggable={false}
+          />
+        </div>
+      </div>
+
+      <div className="menu-hero-side menu-hero-side-right" aria-hidden="true">
+        <div className="menu-hero-upper-crop">
+          <img
+            src={heroesUrl}
+            alt=""
+            className="menu-hero-image menu-hero-image-right"
+            draggable={false}
+          />
+        </div>
+      </div>
 
       <div className="absolute inset-x-0 top-[max(1.25rem,env(safe-area-inset-top))] flex justify-center px-4 sm:top-[max(1.5rem,env(safe-area-inset-top))]">
         <img
@@ -74,13 +97,15 @@ export function MainMenu({
             Start Mission
           </button>
 
-          <button
-            type="button"
-            onClick={onOpenAlignment}
-            className="mt-3 w-full rounded-xl bg-slate-200/95 px-4 py-3 text-sm font-bold uppercase tracking-wide text-slate-900 active:scale-[0.98]"
-          >
-            Sprite Alignment
-          </button>
+          {onOpenAlignment && (
+            <button
+              type="button"
+              onClick={onOpenAlignment}
+              className="mt-3 w-full rounded-xl bg-slate-200/95 px-4 py-3 text-sm font-bold uppercase tracking-wide text-slate-900 active:scale-[0.98]"
+            >
+              Sprite Alignment
+            </button>
+          )}
 
           <button
             type="button"

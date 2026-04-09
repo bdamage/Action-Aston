@@ -10,7 +10,12 @@ export type GamePhase =
 export type AlignmentSpriteKey = "player" | "enemy" | "projectile" | "pickup";
 export type AlignmentField = "w" | "h" | "radius";
 
-export type EnemyType = "enemy01" | "enemy02" | "enemy03";
+export type EnemyType =
+  | "enemy01"
+  | "enemy02"
+  | "enemy03"
+  | "firstBoss"
+  | "finalBoss";
 export type PickupType = "health" | "shield" | "ammo" | "boost";
 
 export interface Vector2 {

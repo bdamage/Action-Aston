@@ -75,6 +75,12 @@ function normalizeMovement(x: number, y: number) {
 
 const SIMULATION_SPEED = 0.7;
 const HIT_FLASH_DURATION = 0.16;
+const FIRST_BOSS_HOVER_Y = HALF_HEIGHT - 1.55;
+const FINAL_BOSS_HOVER_Y = HALF_HEIGHT - 2.05;
+
+function isBossEnemy(enemy: Enemy) {
+  return enemy.type === "firstBoss" || enemy.type === "finalBoss";
+}
 
 export const useGameStore = create<GameStore>((set, get) => ({
   ...createBaseState(),
@@ -232,18 +238,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const enemies: Enemy[] = [...state.enemies, ...spawnedEnemies].map(
       (enemy) => {
         const dx = player.position.x - enemy.position.x;
+        const maxTrackDelta = isBossEnemy(enemy)
+          ? 0.7 * frameDt
+          : 1.2 * frameDt;
         const adjustX = clamp(
           dx * enemy.trackStrength * frameDt,
-          -1.2 * frameDt,
-          1.2 * frameDt,
+          -maxTrackDelta,
+          maxTrackDelta,
         );
         const fireCooldown = enemy.fireCooldown - frameDt;
+        const nextY = isBossEnemy(enemy)
+          ? Math.max(
+              enemy.type === "finalBoss" ? FINAL_BOSS_HOVER_Y : FIRST_BOSS_HOVER_Y,
+              enemy.position.y - enemy.speed * frameDt,
+            )
+          : enemy.position.y - enemy.speed * frameDt;
 
         return {
           ...enemy,
           position: {
             x: enemy.position.x + adjustX,
-            y: enemy.position.y - enemy.speed * frameDt,
+            y: nextY,
           },
           fireCooldown,
           hitFlash: Math.max(0, enemy.hitFlash - frameDt),

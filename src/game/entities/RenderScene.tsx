@@ -4,9 +4,12 @@ import * as THREE from 'three';
 import { AtlasPlane } from '../../components/AtlasPlane';
 import { Starfield } from '../../components/Starfield';
 import { atlas, type SpriteKey } from '../../assets/assetConfig';
+import firstBossUrl from '../../assets/first_boss.png';
+import finalBossUrl from '../../assets/final_boss.png';
 import { getDpiSpriteScaleMultiplier, SPRITE_SCALE } from '../renderTuning';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameStore } from '../state/gameStore';
+import type { EnemyType } from '../types';
 
 function explosionFrame(index: number) {
   if (index % 3 === 0) return 'explosion01' as const;
@@ -16,6 +19,17 @@ function explosionFrame(index: number) {
 
 function scaledSize(width: number, height: number, spriteScaleMultiplier: number): [number, number] {
   return [width * SPRITE_SCALE * spriteScaleMultiplier, height * SPRITE_SCALE * spriteScaleMultiplier];
+}
+
+function scaledSizeFromTexture(
+  texture: THREE.Texture,
+  targetHeight: number,
+  spriteScaleMultiplier: number
+): [number, number] {
+  const image = texture.image as { width?: number; height?: number } | undefined;
+  const width = image?.width ?? 1;
+  const height = image?.height ?? 1;
+  return scaledSize(targetHeight * (width / Math.max(1, height)), targetHeight, spriteScaleMultiplier);
 }
 
 function scaledSizeFromFrame(
@@ -67,6 +81,26 @@ export function RenderScene() {
   );
 
   const baseTexture = useLoader(THREE.TextureLoader, atlas.url);
+  const [firstBossTexture, finalBossTexture] = useLoader(THREE.TextureLoader, [firstBossUrl, finalBossUrl]);
+
+  const bossTextures = useMemo(() => {
+    const output = {
+      firstBoss: firstBossTexture,
+      finalBoss: finalBossTexture
+    };
+
+    for (const texture of Object.values(output)) {
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.magFilter = THREE.LinearFilter;
+      texture.minFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      texture.needsUpdate = true;
+    }
+
+    return output;
+  }, [firstBossTexture, finalBossTexture]);
+
   const textures = useMemo(() => {
     const output = {} as Record<SpriteKey, THREE.Texture>;
 
@@ -85,6 +119,23 @@ export function RenderScene() {
 
     return output;
   }, [baseTexture]);
+
+  const getEnemySize = (enemyType: EnemyType): [number, number] => {
+    if (enemyType === 'firstBoss') {
+      return scaledSizeFromTexture(bossTextures.firstBoss, alignment.enemy.h * 2.7, spriteScaleMultiplier);
+    }
+    if (enemyType === 'finalBoss') {
+      return scaledSizeFromTexture(bossTextures.finalBoss, alignment.enemy.h * 3.1, spriteScaleMultiplier);
+    }
+
+    return scaledSizeFromFrame(enemyType, alignment.enemy.h, spriteScaleMultiplier);
+  };
+
+  const getEnemyTexture = (enemyType: EnemyType): THREE.Texture => {
+    if (enemyType === 'firstBoss') return bossTextures.firstBoss;
+    if (enemyType === 'finalBoss') return bossTextures.finalBoss;
+    return textures[enemyType];
+  };
 
   const isTouch = useMemo(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0, []);
   const maxExplosions = isTouch ? 28 : 60;
@@ -173,9 +224,9 @@ export function RenderScene() {
       {!inAlignmentMode && enemies.map((enemy) => (
         <AtlasPlane
           key={enemy.id}
-          texture={textures[enemy.type]}
+          texture={getEnemyTexture(enemy.type)}
           position={[enemy.position.x, enemy.position.y, 0]}
-          size={scaledSizeFromFrame(enemy.type, alignment.enemy.h, spriteScaleMultiplier)}
+          size={getEnemySize(enemy.type)}
           flashOpacity={hitFlashOpacity(enemy.hitFlash)}
           rotationZ={Math.PI}
         />
