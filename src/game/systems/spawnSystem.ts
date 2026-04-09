@@ -290,8 +290,8 @@ export function updateSpawnTimer(state: GameState, dt: number): Enemy[] {
 
   const pattern = WAVE_PATTERNS[(nextWave - 1) % WAVE_PATTERNS.length];
   const enemyCount = Math.min(
-    nextWave >= 12 ? 8 : 6,
-    2 + Math.floor(nextWave / 3) + Math.floor(state.difficulty / 3.2),
+    nextWave >= 12 ? 5 : 4,
+    1 + Math.floor(nextWave / 4) + Math.floor(state.difficulty / 4.8),
   );
 
   const availableFormations = getAvailableFormations(

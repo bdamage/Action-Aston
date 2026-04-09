@@ -178,11 +178,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return state;
       }
       const base = createBaseState();
+      const storedCoins = loadTotalCoins();
       const garage = useGarageStore.getState();
       const maxShield = shieldMaxForLevel(garage.shieldLevel);
       return {
         ...base,
-        totalCoins: state.totalCoins,
+        totalCoins: storedCoins,
         alignment: state.alignment,
         player: {
           ...base.player,
@@ -209,11 +210,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   restartGame: () =>
     set((state) => {
       const base = createBaseState();
+      const storedCoins = loadTotalCoins();
       const garage = useGarageStore.getState();
       const maxShield = shieldMaxForLevel(garage.shieldLevel);
       return {
         ...base,
-        totalCoins: state.totalCoins,
+        totalCoins: storedCoins,
         phase: "playing",
         alignment: state.alignment,
         player: {

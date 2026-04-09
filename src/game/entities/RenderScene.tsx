@@ -375,7 +375,7 @@ export function RenderScene() {
       })}
 
       {!inAlignmentMode && coins.map((coin) => {
-        const coinSize = scaledSizeFromTexture(preparedCoinTexture, alignment.pickup.h, spriteScaleMultiplier);
+        const coinSize = scaledSizeFromTexture(preparedCoinTexture, alignment.pickup.h * 3, spriteScaleMultiplier);
         return (
           <group key={coin.id}>
             <AtlasPlane
