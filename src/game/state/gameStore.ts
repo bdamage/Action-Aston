@@ -41,12 +41,29 @@ interface GameStore extends GameState {
   step: (dt: number) => void;
 }
 
+const TOTAL_COINS_KEY = "actionAston_totalCoins";
+
+function loadTotalCoins(): number {
+  try {
+    const raw = localStorage.getItem(TOTAL_COINS_KEY);
+    if (raw !== null) return Math.max(0, parseInt(raw, 10) || 0);
+  } catch {}
+  return 0;
+}
+
+function saveTotalCoins(total: number): void {
+  try {
+    localStorage.setItem(TOTAL_COINS_KEY, String(total));
+  } catch {}
+}
+
 function createBaseState(): GameState {
   const alignment = cloneAlignmentTuning();
   return {
     phase: "menu",
     score: 0,
     coinsCollected: 0,
+    totalCoins: loadTotalCoins(),
     elapsed: 0,
     difficulty: 1,
     wave: 0,
@@ -147,6 +164,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const base = createBaseState();
       return {
         ...base,
+        totalCoins: state.totalCoins,
         alignment: state.alignment,
         player: {
           ...base.player,
@@ -171,6 +189,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const base = createBaseState();
       return {
         ...base,
+        totalCoins: state.totalCoins,
         phase: "playing",
         alignment: state.alignment,
         player: {
@@ -560,10 +579,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const phase: GamePhase = player.health <= 0 ? "gameover" : "playing";
 
+    const prevPhase = state.phase;
+    let totalCoins = state.totalCoins;
+    if (phase === "gameover" && prevPhase !== "gameover") {
+      totalCoins = state.totalCoins + coinsCollected;
+      saveTotalCoins(totalCoins);
+    }
+
     set({
       phase,
       score,
       coinsCollected,
+      totalCoins,
       elapsed: nextElapsed,
       difficulty: nextDifficulty,
       wave: spawnState.wave,

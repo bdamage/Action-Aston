@@ -103,6 +103,7 @@ export interface GameState {
   phase: GamePhase;
   score: number;
   coinsCollected: number;
+  totalCoins: number;
   elapsed: number;
   difficulty: number;
   wave: number;
